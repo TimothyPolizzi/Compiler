@@ -30,12 +30,16 @@ public class Lexer {
    * @return The flavor of the token if it is legal, null otherwise.
    */
   public String checkIfLegal(String toCheck) {
-    String intRegex = "0|([1-9][0-9]*)";
-    String doubleRegex = intRegex + ".[0-9]*";
-    String keywordRegex = "(print)|(while)|(i((nt)|f))|(string)|(boolean)|(false)|(true)";
-    String symbolRegex = "('\\{') | ('}') | ('(') | (')') | (=) | ('\"') | (==) | (!=) | ('+')";
+    // Integers are any number, without leading zeros
+    String intRegex = "0|([1-9]\\d*)";
+    // Doubles may are integers with a '.' followed by any digits
+    String doubleRegex = intRegex + "\\.\\d+";
+    // Legal keywords: print, while, if, int, string, boolean, false, true
+    String keywordRegex = "(print)|(while)|(i((nt)|(f)))|(string)|(boolean)|(false)|(true)";
+    // Legal symbols: ',{,},(,),=,",==,!=,+,<,>,<=,>=
+    String symbolRegex = "{ | } | ( | ) | = | \" | == | != | +";
 
-    if(Pattern.matches(intRegex, "a")) {
+    if(Pattern.matches(symbolRegex, toCheck)) {
       System.out.println("works");
     }
 
