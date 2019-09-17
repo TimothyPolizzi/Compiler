@@ -21,6 +21,20 @@ public class Lexer {
     tokenList = new ArrayList<String>();
     current = 0;
     lastGood = 0;
+
+    char[] charList = fileToRead.toCharArray();
+
+    while(lastGood < charList.length) {
+      String currentToken = "";
+
+      while((current < charList.length) && !isSymbol(Character.toString(charList[current]))) {
+        currentToken = charList[current] + currentToken;
+        if(isLegal(currentToken)) {
+
+        }
+
+      }
+    }
   }
 
   /**
@@ -36,13 +50,30 @@ public class Lexer {
     String doubleRegex = intRegex + "\\.\\d+";
     // Legal keywords: print, while, if, int, string, boolean, false, true
     String keywordRegex = "(print)|(while)|(i((nt)|(f)))|(string)|(boolean)|(false)|(true)";
-    // Legal symbols: ',{,},(,),=,",==,!=,+,<,>,<=,>=
-    String symbolRegex = "{ | } | ( | ) | = | \" | == | != | +";
-
-    if(Pattern.matches(symbolRegex, toCheck)) {
-      System.out.println("works");
-    }
 
     return null;
+  }
+
+  /**
+   * Checks the input to see if it is a symbol legal in the grammar.
+   * @param toCheck The input that is to be checked if it is legal.
+   * @return True if the input is legal, false otherwise.
+   */
+  private boolean isSymbol(String toCheck) {
+    // Legal symbols: ',{,},(,),=,",==,!=,+,<,>,<=,>=
+    String symbolRegex = "\\{ | } | ( \\| ) | = | \" | == | != | \\+ | < | > | <= | >= | .";
+    boolean toReturn = false;
+
+    if(Pattern.matches(symbolRegex, toCheck)) {
+      toReturn = true;
+    }
+
+    return toReturn;
+  }
+
+  private boolean isLegal(String toCheck) {
+    boolean toReturn = false;
+
+    return toReturn;
   }
 }
