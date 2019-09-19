@@ -5,15 +5,18 @@ import java.util.regex.Pattern;
 
 /**
  * A lexer for the SAD Compiler for Alan Labouseur's CMPT432 class.
+ *
  * @author Tim Polizzi
  */
 public class Lexer {
+
   private ArrayList<Token> tokenList;
   private int current;
   private int lastGood;
 
   /**
    * Analyzes a file file_to_read, and returns an list of tokens.
+   *
    * @param fileToRead The file that is to be turned into a list of tokens.
    */
   public Lexer(String fileToRead) {
@@ -23,17 +26,17 @@ public class Lexer {
 
     char[] charList = fileToRead.toCharArray();
 
-    while(current < charList.length) {
+    while (current < charList.length) {
       String currentToken = "";
       int line = 0;
       char currentChar = charList[current];
 
       // Check if the current item is a symbol
-      if(isSymbol(currentChar)) {
+      if (isSymbol(currentChar)) {
         currentToken += currentChar;
 
         // If that symbol is two parts, check here
-        if(isTwoPart(currentChar) && charList[current+1] == '=') {
+        if (isTwoPart(currentChar) && charList[current + 1] == '=') {
           current++;
           currentToken += charList[current];
         }
@@ -41,7 +44,7 @@ public class Lexer {
         current++;
 
         //check for comments, skip the commented section
-      } else if(currentChar == '/') {
+      } else if (currentChar == '/') {
         current++;
 
         if (charList[current] == '*') {
@@ -50,45 +53,45 @@ public class Lexer {
             current++;
           }
         } else {
-          tokenList.add(new Token(Character.toString(charList[current - 1]), line, current - 1));
+          tokenList.add(new Token(Character.toString(charList[current - 1]), line, current - 1, false));
         }
 
         // what to do in case of quotes
-      } else if(currentChar == '"') {
+      } else if (currentChar == '"') {
         int quoteLoop = current;
 
-        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop));
+        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, false));
         quoteLoop++;
 
-        while(charList[quoteLoop] != '"' && charList[quoteLoop] != '$') {
-          tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop));
+        while (charList[quoteLoop] != '"' && charList[quoteLoop] != '$') {
+          tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, true));
           quoteLoop++;
         }
 
-        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop));
+        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, false));
         current = quoteLoop + 1;
 
         // Check if it is a legal character or integer or '.' (for doubles)
-      } else if(legalVal(currentChar)) {
+      } else if (legalVal(currentChar)) {
         int start = current;
-        lastGood = current+1;
+        lastGood = current + 1;
         String tempToken = "";
 
         while ((current < charList.length) && legalVal(charList[current])) {
-          if(isKeyword(tempToken) || isNumber(tempToken)) {
+          if (isKeyword(tempToken) || isNumber(tempToken)) {
             lastGood = current;
           }
           tempToken += charList[current];
           current++;
         }
 
-        if(isKeyword(tempToken) || isNumber(tempToken)) {
+        if (isKeyword(tempToken) || isNumber(tempToken)) {
           lastGood = current;
         }
 
         int endBound = lastGood - start;
-        String goodToken = tempToken.substring(0,endBound);
-        tokenList.add(new Token(goodToken, line, start));
+        String goodToken = tempToken.substring(0, endBound);
+        tokenList.add(new Token(goodToken, line, start, false));
 
         current = lastGood;
 
@@ -98,44 +101,21 @@ public class Lexer {
         current++;
       }
 
-      // skip spaces
-      if(!currentToken.equals(" ") && !currentToken.equals("")) {
-        tokenList.add(new Token(currentToken, line, current));
+      // skip spaces, ignore empty string
+      if (!currentToken.equals(" ") && !currentToken.equals("")) {
+        tokenList.add(new Token(currentToken, line, current, false));
       }
     }
 
+    // print statement for testing purposes, this would be the "verbose mode" switch
     for(Token t : tokenList) {
       System.out.println(t.toString());
     }
   }
 
   /**
-   * Checks the legality of a given string in the SAD Compiler language, and returns the flavor of
-   * token that can be made if it is legal.
-   * @param toCheck The string that needs to be checked for legality.
-   * @return True if the token is legal, false otherwise.
-   */
-  private boolean isLegal(String toCheck) {
-    // Integers are any number, without leading zeros
-    String intRegex = "0|([1-9]\\d*)";
-    // Doubles may are integers with a '.' followed by any digits
-    String doubleRegex = intRegex + "\\.\\d+";
-    // Legal keywords: print, while, if, int, string, boolean, false, true
-    String keywordRegex = "(print)|(while)|(i((nt)|(f)))|(string)|(boolean)|(false)|(true)";
-
-    String legalRegex = intRegex + "|" + doubleRegex + "|" + keywordRegex;
-
-    boolean toReturn = false;
-
-    if (Pattern.matches(legalRegex, toCheck)) {
-      toReturn = true;
-    }
-
-    return toReturn;
-  }
-
-  /**
    * Checks if a given string is a keyword in the SAD compiler's grammar.
+   *
    * @param toCheck The string to be checked if it is a keyword.
    * @return True if toCheck is a keyword, false otherwise.
    */
@@ -143,7 +123,7 @@ public class Lexer {
     String keywordRegex = "(print)|(while)|(i((nt)|(f)))|(string)|(boolean)|(false)|(true)";
     boolean toReturn = false;
 
-    if(Pattern.matches(keywordRegex, toCheck)) {
+    if (Pattern.matches(keywordRegex, toCheck)) {
       toReturn = true;
     }
 
@@ -152,6 +132,7 @@ public class Lexer {
 
   /**
    * Checks if a given string is a number in the SAD compiler's grammar.
+   *
    * @param toCheck The string to be checked if it is a keyword.
    * @return True if toCheck is a number, false otherwise.
    */
@@ -164,7 +145,7 @@ public class Lexer {
     String numberRegex = intRegex + "|" + doubleRegex;
     boolean toReturn = false;
 
-    if(Pattern.matches(numberRegex, toCheck)) {
+    if (Pattern.matches(numberRegex, toCheck)) {
       toReturn = true;
     }
 
@@ -173,15 +154,16 @@ public class Lexer {
 
   /**
    * Checks the input to see if it is a symbol legal in the grammar.
+   *
    * @param toCheck The input that is to be checked if it is legal.
    * @return True if the input is legal, false otherwise.
    */
   private boolean isSymbol(char toCheck) {
-    // Legal symbols: ',{,},(,),=,",==,!=,+,<,>,<=,>=,$
-    String symbolRegex = "\\{|}|(\\|)|=|!|\\+|<|>|$";
+    // Legal symbols: {,},(,),=,+,<,>,$
+    String symbolRegex = "[{}()=!+<>$]";
     boolean toReturn = false;
 
-    if(Pattern.matches(symbolRegex, Character.toString(toCheck))) {
+    if (Pattern.matches(symbolRegex, Character.toString(toCheck))) {
       toReturn = true;
     }
 
@@ -190,14 +172,15 @@ public class Lexer {
 
   /**
    * Checks to see if the inputted symbol is part of a two part symbol.
+   *
    * @param toCheck The string that is to be checked.
    * @return True if the item is a part of a two part symbol, false otherwise.
    */
   private boolean isTwoPart(char toCheck) {
-    String symbolRegex = "=|!|<|>";
+    String symbolRegex = "[=!<>]";
     boolean toReturn = false;
 
-    if(Pattern.matches(symbolRegex, Character.toString(toCheck))) {
+    if (Pattern.matches(symbolRegex, Character.toString(toCheck))) {
       toReturn = true;
     }
 
@@ -206,6 +189,7 @@ public class Lexer {
 
   /**
    * Checks to see if the value is a number, character or a '.' (for doubles).
+   *
    * @param toCheck The string that is to be checked.
    * @return True if the item is a legal symbol, false otherwise.
    */
@@ -213,7 +197,7 @@ public class Lexer {
     String symbolRegex = "[a-z]|\\d|\\.";
     boolean toReturn = false;
 
-    if(Pattern.matches(symbolRegex, Character.toString(toCheck))) {
+    if (Pattern.matches(symbolRegex, Character.toString(toCheck))) {
       toReturn = true;
     }
 

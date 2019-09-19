@@ -7,7 +7,7 @@ public class LexerTester {
 
   public static void main(String[] args) {
     String text = "Tim is here$";
-    String quote = "\"I enjoy food\"$";
+    String quote = "\"I enjoy food\" 123$";
     String quoteNoEnd = "\"Big Yoshi$";
     String integer = "123456790$";
     String decimal = "123.456$";
@@ -15,7 +15,7 @@ public class LexerTester {
     String javaKeywords = "int abc = 123; for(int incr = 0; incr < 10; incr++) { if( a != b) { System.out.print(\"hi\")};}$";
     String noSpaces = "abcint123printwhile";
 
-    Lexer lex = new Lexer(noSpaces);
+    Lexer lex = new Lexer(text);
   }
 
 }
