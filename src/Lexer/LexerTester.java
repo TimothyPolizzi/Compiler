@@ -12,10 +12,13 @@ public class LexerTester {
     String integer = "123456790$";
     String decimal = "123.456$";
     String keywords = "int a = 123; for(int i = 0; i < 10; i++) { print(\"hi\");};$";
-    String javaKeywords = "int abc = 123; for(int incr = 0; incr < 10; incr++) { if( a != b) { System.out.print(\"hi\")};}$";
-    String noSpaces = "abcint123printwhile";
+    String javaKeywords = "int abc = 123; \nfor(int incr = 0; incr < 10; incr++) {\nif( a != b) {"
+        + "\n System.out.print(\"hi\")\n}\n}$";
+    String noSpaces = "abcint123printwhile$";
 
-    Lexer lex = new Lexer(text);
+    String multiProgram = integer + decimal + quote + javaKeywords + noSpaces;
+
+    Lexer lex = new Lexer(multiProgram, true);
   }
 
 }

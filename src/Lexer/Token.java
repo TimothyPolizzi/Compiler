@@ -57,7 +57,7 @@ public class Token {
    * Checks to see if there was an error in setting a flavor to the Token, which will only occur if
    * a illegal character has been entered into the lexer.
    */
-  private boolean errorCheck() {
+  public boolean errorCheck() {
     boolean error = false;
 
     if (flavor.equals("error")) {
@@ -75,6 +75,7 @@ public class Token {
    */
   public String toString() {
     String toString;
+
     if (!errorCheck()) {
       toString =
           "DEBUG Lexer - " + flavor + " [ " + original + " ] found at (" + line + ":" + pos + ")";

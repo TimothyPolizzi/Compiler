@@ -10,25 +10,119 @@ import java.util.regex.Pattern;
  */
 public class Lexer {
 
-  private ArrayList<Token> tokenList;
-  private int current;
-  private int lastGood;
+  private ArrayList<ArrayList<Token>> masterList;
 
   /**
-   * Analyzes a file file_to_read, and returns an list of tokens.
+   * Analyzes a file fileToRead, and generates a list of Tokens.
    *
    * @param fileToRead The file that is to be turned into a list of tokens.
+   * @param verbose A boolean that when True, shows all generated tokens.
+   */
+  public Lexer(String fileToRead, boolean verbose) {
+    masterList = new ArrayList<ArrayList<Token>>();
+
+    ArrayList<String> programList = findPrograms(fileToRead);
+
+    int programNo = 0;
+    int lineNo = 1;
+
+    while (programList.size() > programNo) {
+      int printProgramNo = programNo + 1;
+      System.out.println("\n\nINFO Lexer - Lexing program " + printProgramNo + "...");
+
+      ArrayList<String> lineList = breakLines(programList.get(programNo));
+      int errCount = 0;
+
+      for (String line : lineList) {
+        char[] charList = line.toCharArray();
+        ArrayList<Token> currentLine = lexLine(charList, lineNo, verbose);
+
+        for (Token t : currentLine) {
+          if (t.errorCheck()) {
+            errCount++;
+          }
+        }
+
+        masterList.add(currentLine);
+        lineNo++;
+      }
+
+      if (errCount == 0) {
+        System.out.println("INFO Lexer - Lex completed with 0 errors");
+      } else {
+        System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s)");
+      }
+
+      programNo++;
+    }
+  }
+
+  /**
+   * Lexes a file in non-verbose mode.
+   *
+   * @param fileToRead The file to be Lexed.
    */
   public Lexer(String fileToRead) {
-    tokenList = new ArrayList<Token>();
-    current = 0;
-    lastGood = 0;
+    this(fileToRead, false);
+  }
 
-    char[] charList = fileToRead.toCharArray();
+  /**
+   * Finds the end of program markers and separates programs using them.
+   *
+   * @param program The initial program that needs to be checked and separated (if need be)
+   * @return An ArrayList containing the String representations of all programs located originally
+   * in program.
+   */
+  private ArrayList<String> findPrograms(String program) {
+    ArrayList<String> programs = new ArrayList<>();
+
+    if (program.contains("$")) {
+      while (program.contains("$")) {
+        programs.add(program.substring(0, program.indexOf("$")+1));
+        program = program.substring(program.indexOf("$")+1);
+      }
+    } else {
+      programs.add(program);
+    }
+
+    return programs;
+  }
+
+  /**
+   * Breaks any lines into separate strings from toBreak.
+   *
+   * @param toBreak The string that is to be broken into lines.
+   * @return An ArrayList containing all the newly broken down strings.
+   */
+  private ArrayList<String> breakLines(String toBreak) {
+    ArrayList<String> lines = new ArrayList<>();
+
+    if (toBreak.contains("\n")) {
+      while (toBreak.contains("\n")) {
+        lines.add(toBreak.substring(0, toBreak.indexOf("\n")+1));
+        toBreak = toBreak.substring(toBreak.indexOf("\n")+1);
+      }
+    } else {
+      lines.add(toBreak);
+    }
+    lines.add(toBreak);
+
+    return lines;
+  }
+
+  /**
+   * Generates a list of tokens from a line of code, using the grammar of the SAD compiler.
+   *
+   * @param charList The list of characters in the line that is to be broken into tokens.
+   * @param lineNum The line number on which this is occurring.
+   */
+  private ArrayList<Token> lexLine(char[] charList, int lineNum, boolean verbose) {
+    int current = 0;
+    int lastGood;
+    ArrayList<Token> tokenList = new ArrayList<Token>();
 
     while (current < charList.length) {
       String currentToken = "";
-      int line = 0;
       char currentChar = charList[current];
 
       // Check if the current item is a symbol
@@ -53,22 +147,26 @@ public class Lexer {
             current++;
           }
         } else {
-          tokenList.add(new Token(Character.toString(charList[current - 1]), line, current - 1, false));
+          tokenList.add(
+              new Token(Character.toString(charList[current - 1]), lineNum, current - 1, false));
         }
 
         // what to do in case of quotes
       } else if (currentChar == '"') {
         int quoteLoop = current;
 
-        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, false));
+        tokenList
+            .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false));
         quoteLoop++;
 
         while (charList[quoteLoop] != '"' && charList[quoteLoop] != '$') {
-          tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, true));
+          tokenList
+              .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, true));
           quoteLoop++;
         }
 
-        tokenList.add(new Token(Character.toString(charList[quoteLoop]), line, quoteLoop, false));
+        tokenList
+            .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false));
         current = quoteLoop + 1;
 
         // Check if it is a legal character or integer or '.' (for doubles)
@@ -91,7 +189,7 @@ public class Lexer {
 
         int endBound = lastGood - start;
         String goodToken = tempToken.substring(0, endBound);
-        tokenList.add(new Token(goodToken, line, start, false));
+        tokenList.add(new Token(goodToken, lineNum, start, false));
 
         current = lastGood;
 
@@ -102,15 +200,18 @@ public class Lexer {
       }
 
       // skip spaces, ignore empty string
-      if (!currentToken.equals(" ") && !currentToken.equals("")) {
-        tokenList.add(new Token(currentToken, line, current, false));
+      if (!currentToken.equals(" ") && !currentToken.equals("") && !Pattern.matches("\\n", currentToken)) {
+        tokenList.add(new Token(currentToken, lineNum, current, false));
       }
     }
 
-    // print statement for testing purposes, this would be the "verbose mode" switch
-    for(Token t : tokenList) {
-      System.out.println(t.toString());
+    // print statement for verbose
+    if (verbose) {
+      for (Token t : tokenList) {
+        System.out.println(t.toString());
+      }
     }
+    return tokenList;
   }
 
   /**
