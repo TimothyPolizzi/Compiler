@@ -1,5 +1,7 @@
 package Lexer;
 
+import java.util.regex.Pattern;
+
 public class Token {
   private String flavor;
   private String original;
@@ -15,6 +17,12 @@ public class Token {
   }
 
   private void setFlavor() {
+    
+  }
 
+  public String toString(){
+    String toString = "DEBUG Lexer - " + flavor + " [ " + original + " ] found at (" + line + ":"
+        + pos + ")";
+    return toString;
   }
 }
