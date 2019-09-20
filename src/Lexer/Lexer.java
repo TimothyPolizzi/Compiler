@@ -12,6 +12,7 @@ public class Lexer {
 
   private ArrayList<Token> masterList;
   private int errCount;
+  private int warnCount;
 
   /**
    * Analyzes a file fileToRead, and generates a list of Tokens.
@@ -22,6 +23,7 @@ public class Lexer {
   public Lexer(String fileToRead, int programNo, boolean verbose) {
     masterList = new ArrayList<Token>();
     errCount = 0;
+    warnCount = 0;
 
     int lineNo = 1;
 
@@ -40,9 +42,11 @@ public class Lexer {
     eopWarning(masterList);
 
     if (errCount == 0) {
-      System.out.println("INFO Lexer - Lex completed with 0 errors");
+      System.out
+          .println("INFO Lexer - Lex completed with 0 errors and " + warnCount + " warning(s)");
     } else {
-      System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s)");
+      System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s) and " + warnCount
+          + " warning(s)");
     }
 
   }
@@ -69,6 +73,9 @@ public class Lexer {
       while (toBreak.contains("\n")) {
         lines.add(toBreak.substring(0, toBreak.indexOf("\n") + 1));
         toBreak = toBreak.substring(toBreak.indexOf("\n") + 1);
+      }
+      if (!toBreak.equals("")) {
+        lines.add(toBreak);
       }
     } else {
       lines.add(toBreak);
@@ -195,6 +202,7 @@ public class Lexer {
     if (!tokenList.get(tokenList.size() - 1).getOriginal()
         .equals("$")) { // If the last token is not '$'
       System.out.println("WARNING Lexer - Missing EOP Character '$'");
+      warnCount++;
     }
 
   }

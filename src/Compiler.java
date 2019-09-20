@@ -35,7 +35,7 @@ public class Compiler {
         programs.add(toBreak.substring(0, toBreak.indexOf("$") + 1));
         toBreak = toBreak.substring(toBreak.indexOf("$") + 1);
       }
-      if (!toBreak.equals("")) {
+      if (!toBreak.equals("") && !toBreak.equals("\n")) {
         programs.add(toBreak);
       }
     } else {
