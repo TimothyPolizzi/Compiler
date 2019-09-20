@@ -40,9 +40,7 @@ public class Token {
         "CHAR", "STRING", "T_BOOL", "F_BOOL", "SPACE", "EQUAL", "NOT_EQUAL", "INT_OP", "L_BOOL",
         "G_BOOL", "GE_BOOL", "LE_BOOL"};
 
-
-
-    if(string) {
+    if (string) {
       flavor = "LITERAL";
     } else {
       for (int i = 0; i < regexArr.length; i++) {
@@ -83,5 +81,14 @@ public class Token {
       toString = "ERROR Lexer - Error:" + line + ":" + pos + " Unrecognized Token: " + original;
     }
     return toString;
+  }
+
+  /**
+   * Gets the original string the token was made out of.
+   *
+   * @return The original string.
+   */
+  public String getOriginal() {
+    return original;
   }
 }

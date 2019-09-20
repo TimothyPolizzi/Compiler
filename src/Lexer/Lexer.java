@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
  */
 public class Lexer {
 
-  private ArrayList<ArrayList<Token>> masterList;
+  private ArrayList<Token> masterList;
+  private int errCount;
 
   /**
    * Analyzes a file fileToRead, and generates a list of Tokens.
@@ -18,43 +19,32 @@ public class Lexer {
    * @param fileToRead The file that is to be turned into a list of tokens.
    * @param verbose A boolean that when True, shows all generated tokens.
    */
-  public Lexer(String fileToRead, boolean verbose) {
-    masterList = new ArrayList<ArrayList<Token>>();
+  public Lexer(String fileToRead, int programNo, boolean verbose) {
+    masterList = new ArrayList<Token>();
+    errCount = 0;
 
-    ArrayList<String> programList = findPrograms(fileToRead);
-
-    int programNo = 0;
     int lineNo = 1;
 
-    while (programList.size() > programNo) {
-      int printProgramNo = programNo + 1;
-      System.out.println("\n\nINFO Lexer - Lexing program " + printProgramNo + "...");
+    System.out.println("\nINFO Lexer - Lexing program " + programNo + "...");
 
-      ArrayList<String> lineList = breakLines(programList.get(programNo));
-      int errCount = 0;
+    ArrayList<String> lineList = breakLines(fileToRead);
 
-      for (String line : lineList) {
-        char[] charList = line.toCharArray();
-        ArrayList<Token> currentLine = lexLine(charList, lineNo, verbose);
+    for (String line : lineList) {
+      char[] charList = line.toCharArray();
+      ArrayList<Token> currentLine = lexLine(charList, lineNo, verbose);
 
-        for (Token t : currentLine) {
-          if (t.errorCheck()) {
-            errCount++;
-          }
-        }
-
-        masterList.add(currentLine);
-        lineNo++;
-      }
-
-      if (errCount == 0) {
-        System.out.println("INFO Lexer - Lex completed with 0 errors");
-      } else {
-        System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s)");
-      }
-
-      programNo++;
+      masterList.addAll(currentLine);
+      lineNo++;
     }
+
+    eopWarning(masterList);
+
+    if (errCount == 0) {
+      System.out.println("INFO Lexer - Lex completed with 0 errors");
+    } else {
+      System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s)");
+    }
+
   }
 
   /**
@@ -62,30 +52,8 @@ public class Lexer {
    *
    * @param fileToRead The file to be Lexed.
    */
-  public Lexer(String fileToRead) {
-    this(fileToRead, false);
-  }
-
-  /**
-   * Finds the end of program markers and separates programs using them.
-   *
-   * @param program The initial program that needs to be checked and separated (if need be)
-   * @return An ArrayList containing the String representations of all programs located originally
-   * in program.
-   */
-  private ArrayList<String> findPrograms(String program) {
-    ArrayList<String> programs = new ArrayList<>();
-
-    if (program.contains("$")) {
-      while (program.contains("$")) {
-        programs.add(program.substring(0, program.indexOf("$")+1));
-        program = program.substring(program.indexOf("$")+1);
-      }
-    } else {
-      programs.add(program);
-    }
-
-    return programs;
+  public Lexer(String fileToRead, int programNo) {
+    this(fileToRead, programNo, false);
   }
 
   /**
@@ -99,13 +67,12 @@ public class Lexer {
 
     if (toBreak.contains("\n")) {
       while (toBreak.contains("\n")) {
-        lines.add(toBreak.substring(0, toBreak.indexOf("\n")+1));
-        toBreak = toBreak.substring(toBreak.indexOf("\n")+1);
+        lines.add(toBreak.substring(0, toBreak.indexOf("\n") + 1));
+        toBreak = toBreak.substring(toBreak.indexOf("\n") + 1);
       }
     } else {
       lines.add(toBreak);
     }
-    lines.add(toBreak);
 
     return lines;
   }
@@ -147,26 +114,33 @@ public class Lexer {
             current++;
           }
         } else {
-          tokenList.add(
-              new Token(Character.toString(charList[current - 1]), lineNum, current - 1, false));
+          Token thisToken =
+              new Token(Character.toString(charList[current - 1]), lineNum, current - 1, false);
+          tokenList = updateToken(thisToken, tokenList, verbose);
         }
 
         // what to do in case of quotes
       } else if (currentChar == '"') {
         int quoteLoop = current;
 
-        tokenList
-            .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false));
+        Token thisToken =
+            new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
+
+        tokenList = updateToken(thisToken, tokenList, verbose);
+
         quoteLoop++;
 
         while (charList[quoteLoop] != '"' && charList[quoteLoop] != '$') {
-          tokenList
-              .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, true));
+          thisToken =
+              new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, true);
+          tokenList = updateToken(thisToken, tokenList, verbose);
+
           quoteLoop++;
         }
+        thisToken =
+            new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
+        tokenList = updateToken(thisToken, tokenList, verbose);
 
-        tokenList
-            .add(new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false));
         current = quoteLoop + 1;
 
         // Check if it is a legal character or integer or '.' (for doubles)
@@ -189,7 +163,9 @@ public class Lexer {
 
         int endBound = lastGood - start;
         String goodToken = tempToken.substring(0, endBound);
-        tokenList.add(new Token(goodToken, lineNum, start, false));
+        Token thisToken = new Token(goodToken, lineNum, start, false);
+
+        tokenList = updateToken(thisToken, tokenList, verbose);
 
         current = lastGood;
 
@@ -199,16 +175,42 @@ public class Lexer {
         current++;
       }
 
-      // skip spaces, ignore empty string
-      if (!currentToken.equals(" ") && !currentToken.equals("") && !Pattern.matches("\\n", currentToken)) {
-        tokenList.add(new Token(currentToken, lineNum, current, false));
+      // skip spaces, ignore empty string, ignore new lines
+      if (!currentToken.equals(" ") && !currentToken.equals("") && !Pattern
+          .matches("\\n", currentToken)) {
+        Token thisToken = new Token(currentToken, lineNum, current, false);
+        tokenList = updateToken(thisToken, tokenList, verbose);
       }
     }
 
-    // print statement for verbose
-    if (verbose) {
-      for (Token t : tokenList) {
-        System.out.println(t.toString());
+    return tokenList;
+  }
+
+  /**
+   * Returns a warning if the code is missing an EOP character.
+   *
+   * @param tokenList A list containing the tokens generated from lexing the current program.
+   */
+  private void eopWarning(ArrayList<Token> tokenList) {
+    if (!tokenList.get(tokenList.size() - 1).getOriginal()
+        .equals("$")) { // If the last token is not '$'
+      System.out.println("WARNING Lexer - Missing EOP Character '$'");
+    }
+
+  }
+
+  /**
+   * Adds a token to an array list and displays tokens or errors.
+   */
+  private ArrayList<Token> updateToken(Token thisToken, ArrayList<Token> tokenList,
+      boolean isVerbose) {
+    if (thisToken.errorCheck()) {
+      System.out.println(thisToken.toString());
+      errCount++;
+    } else {
+      tokenList.add(thisToken);
+      if (isVerbose) {
+        System.out.println(thisToken.toString());
       }
     }
     return tokenList;
@@ -303,5 +305,14 @@ public class Lexer {
     }
 
     return toReturn;
+  }
+
+  /**
+   * Returns the master list of tokens from the program.
+   *
+   * @return The master list of tokens from the program.
+   */
+  public ArrayList<Token> getTokenList() {
+    return masterList;
   }
 }
