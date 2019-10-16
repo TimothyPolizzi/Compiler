@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 /**
- * A lexer for the SAD Compiler for Alan Labouseur's CMPT432 class.
+ * A lexer for the SAD Compiler for Alan Labouseur's compilers class.
  *
  * @author Tim Polizzi
  */
@@ -212,6 +212,7 @@ public class Lexer {
 
   /**
    * Ignores commented text.
+   *
    * @param charList The list of characters currently being lexed.
    * @param current The index of the currently being lexed character.
    * @return The new value of the item to be lexed.
@@ -367,5 +368,20 @@ public class Lexer {
    */
   public ArrayList<Token> getTokenList() {
     return masterList;
+  }
+
+  /**
+   * Returns the state of the Lex
+   *
+   * @return false if the lex failed, true otherwise.
+   */
+  public boolean success() {
+    boolean success = false;
+
+    if (errCount > 0) {
+      success = true;
+    }
+
+    return success;
   }
 }

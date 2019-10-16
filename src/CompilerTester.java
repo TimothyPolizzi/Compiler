@@ -5,8 +5,8 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-//    individualTests();
-    readFromFileTest();
+    individualTests();
+//    readFromFileTest();
 //    stdInRead(true);
   }
 
@@ -95,7 +95,7 @@ public class CompilerTester {
     String quoteTest = quote + twoLines + noEnd;
 
     // Test Here
-    Compiler comp = new Compiler(alanComments, true);
+    Compiler comp = new Compiler(javaKeywords, true);
   }
 
   /**

@@ -28,6 +28,8 @@ public class Token {
    * Sets the "Flavor" of the Token, so that it may be used in other parts of the compiler.
    */
   private void setFlavor() {
+    //So the double and less/greater than or equal to are unused but I'm leaving them in. Just in case.
+
     String regexInt = "0|[1-9][0-9]*";
     String regexDouble = regexInt + "\\.[0-9]*";
     String regexChar = "[a-z]";
@@ -41,11 +43,11 @@ public class Token {
         "G_BOOL", "GE_BOOL", "LE_BOOL"};
 
     if (string) {
-        if (Pattern.matches(regexChar + "| ", original)) {
-          flavor = "STRING";
-        } else {
-          flavor = "error";
-        }
+      if (Pattern.matches(regexChar + "| ", original)) {
+        flavor = "CHAR";
+      } else {
+        flavor = "error";
+      }
     } else {
       for (int i = 0; i < regexArr.length; i++) {
         if (Pattern.matches(regexArr[i], original)) {
@@ -94,5 +96,23 @@ public class Token {
    */
   public String getOriginal() {
     return original;
+  }
+
+  /**
+   * Gets the Flavor of the Token
+   *
+   * @return the Flavor of the Token
+   */
+  public String getFlavor() {
+    return flavor;
+  }
+
+  /**
+   * Gets the Line number of the Token
+   *
+   * @return the Line number of the Token
+   */
+  public int getLine() {
+    return line;
   }
 }

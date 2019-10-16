@@ -1,4 +1,5 @@
 import Lexer.Lexer;
+import Parser.Parser;
 import java.util.ArrayList;
 
 public class Compiler {
@@ -7,11 +8,22 @@ public class Compiler {
     ArrayList<String> programs = breakIntoPrograms(toCompile);
     int iter = 1;
 
+    System.out.print("DEBUG Verbose mode is ");
+    if(verbose){
+      System.out.println("on");
+    } else {
+      System.out.println("off");
+    }
+
     for (String program : programs) {
       Lexer lex = new Lexer(program, iter, verbose);
-      // Parser parse = new Parser(lex.getTokenList());
-      // TODO: Next Step
-      // TODO: Code Gen
+      if(lex.success()) {
+        Parser parse = new Parser(iter, lex.getTokenList(), verbose);
+//        if (parse.success()) {
+//          // TODO: Semantic Analysis
+//          // TODO: Code Gen
+//        }
+      }
 
       iter++;
     }
