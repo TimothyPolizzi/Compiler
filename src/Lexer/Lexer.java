@@ -12,6 +12,8 @@ public class Lexer {
 
   private ArrayList<Token> masterList;
   private int errCount;
+  private int warnCount;
+  private boolean multiLineQuote;
 
   /**
    * Analyzes a file fileToRead, and generates a list of Tokens.
@@ -22,6 +24,7 @@ public class Lexer {
   public Lexer(String fileToRead, int programNo, boolean verbose) {
     masterList = new ArrayList<Token>();
     errCount = 0;
+    warnCount = 0;
 
     int lineNo = 1;
 
@@ -40,9 +43,11 @@ public class Lexer {
     eopWarning(masterList);
 
     if (errCount == 0) {
-      System.out.println("INFO Lexer - Lex completed with 0 errors");
+      System.out
+          .println("INFO Lexer - Lex completed with 0 errors and " + warnCount + " warning(s)");
     } else {
-      System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s)");
+      System.out.println("ERROR Lexer - Lex failed with " + errCount + " error(s) and " + warnCount
+          + " warning(s)");
     }
 
   }
@@ -70,6 +75,9 @@ public class Lexer {
         lines.add(toBreak.substring(0, toBreak.indexOf("\n") + 1));
         toBreak = toBreak.substring(toBreak.indexOf("\n") + 1);
       }
+      if (!toBreak.equals("")) {
+        lines.add(toBreak);
+      }
     } else {
       lines.add(toBreak);
     }
@@ -93,7 +101,7 @@ public class Lexer {
       char currentChar = charList[current];
 
       // Check if the current item is a symbol
-      if (isSymbol(currentChar)) {
+      if (isSymbol(currentChar) && !multiLineQuote) {
         currentToken += currentChar;
 
         // If that symbol is two parts, check here
@@ -105,43 +113,59 @@ public class Lexer {
         current++;
 
         //check for comments, skip the commented section
-      } else if (currentChar == '/') {
-        current++;
-
-        if (charList[current] == '*') {
-          while ((charList[current] == '$') ||
-              (charList[current] != '*' && charList[current + 1] == '/')) {
-            current++;
-          }
-        } else {
-          Token thisToken =
-              new Token(Character.toString(charList[current - 1]), lineNum, current - 1, false);
-          tokenList = updateToken(thisToken, tokenList, verbose);
-        }
+      } else if (Pattern.matches("/", Character.toString(currentChar)) &&
+          Pattern.matches("\\*", Character.toString(charList[current + 1])) && !multiLineQuote) {
+        current = ignoreComments(charList, current);
 
         // what to do in case of quotes
-      } else if (currentChar == '"') {
+      } else if (currentChar == '"' || multiLineQuote) {
         int quoteLoop = current;
+        Token thisToken = null;
 
-        Token thisToken =
-            new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
-
-        tokenList = updateToken(thisToken, tokenList, verbose);
-
-        quoteLoop++;
-
-        while (charList[quoteLoop] != '"' && charList[quoteLoop] != '$') {
+        if (!multiLineQuote) {
           thisToken =
-              new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, true);
+              new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
+
           tokenList = updateToken(thisToken, tokenList, verbose);
 
           quoteLoop++;
         }
-        thisToken =
-            new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
-        tokenList = updateToken(thisToken, tokenList, verbose);
 
-        current = quoteLoop + 1;
+        boolean cont = true;
+        while (cont) {
+          if (Pattern.matches("\"", Character.toString(charList[quoteLoop]))) {
+            cont = false;
+            multiLineQuote = false;
+          } else if (Pattern.matches("[$]", Character.toString(charList[quoteLoop]))) {
+            cont = false;
+            System.out.println("WARNING Lexer - Missing EndQuote Character '\"'");
+            warnCount++;
+          } else if (Pattern.matches("\n", Character.toString(charList[quoteLoop]))) {
+            multiLineQuote = true;
+            quoteLoop++;
+            cont = false;
+          } else if (Pattern.matches("/", Character.toString(charList[quoteLoop])) &&
+              Pattern.matches("\\*", Character.toString(charList[quoteLoop + 1]))
+              && !multiLineQuote) {
+            quoteLoop = ignoreComments(charList, quoteLoop);
+          } else {
+            thisToken =
+                new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, true);
+            tokenList = updateToken(thisToken, tokenList, verbose);
+
+            quoteLoop++;
+          }
+        }
+        if (quoteLoop < charList.length &&
+            Pattern.matches("\"", Character.toString(charList[quoteLoop]))) {
+          thisToken =
+              new Token(Character.toString(charList[quoteLoop]), lineNum, quoteLoop, false);
+          tokenList = updateToken(thisToken, tokenList, verbose);
+
+          quoteLoop++;
+        }
+
+        current = quoteLoop;
 
         // Check if it is a legal character or integer or '.' (for doubles)
       } else if (legalVal(currentChar)) {
@@ -187,6 +211,34 @@ public class Lexer {
   }
 
   /**
+   * Ignores commented text.
+   * @param charList The list of characters currently being lexed.
+   * @param current The index of the currently being lexed character.
+   * @return The new value of the item to be lexed.
+   */
+  private int ignoreComments(char[] charList, int current) {
+    current += 2;
+
+    boolean cont2 = true;
+    while (cont2) {
+      // Case for program terminating before finding a end comment
+      if (Pattern.matches("\\$", Character.toString(charList[current]))) {
+        System.out.println("WARNING Lexer - Missing EndComment Character '*/'");
+        warnCount++;
+        cont2 = false;
+        // Case for end of comment
+      } else if (Pattern.matches("\\*", Character.toString(charList[current])) &&
+          Pattern.matches("/", Character.toString(charList[current + 1]))) {
+        cont2 = false;
+        current += 2;
+      } else {
+        current++;
+      }
+    }
+    return current;
+  }
+
+  /**
    * Returns a warning if the code is missing an EOP character.
    *
    * @param tokenList A list containing the tokens generated from lexing the current program.
@@ -195,6 +247,7 @@ public class Lexer {
     if (!tokenList.get(tokenList.size() - 1).getOriginal()
         .equals("$")) { // If the last token is not '$'
       System.out.println("WARNING Lexer - Missing EOP Character '$'");
+      warnCount++;
     }
 
   }
