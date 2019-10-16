@@ -41,7 +41,11 @@ public class Token {
         "G_BOOL", "GE_BOOL", "LE_BOOL"};
 
     if (string) {
-      flavor = "LITERAL";
+        if (Pattern.matches(regexChar + "| ", original)) {
+          flavor = "STRING";
+        } else {
+          flavor = "error";
+        }
     } else {
       for (int i = 0; i < regexArr.length; i++) {
         if (Pattern.matches(regexArr[i], original)) {
