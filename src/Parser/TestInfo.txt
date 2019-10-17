@@ -1,0 +1,37 @@
+Testing used the Following cases:
+
+{
+int i
+i = 1
+x = 10
+}$
+
+{while (1+"  ab " != (false == x)) {}}$
+
+{int i i=1+1+1+1}$
+
+int i$
+
+{}$
+
+{$
+
+}$
+
+{print(1+2+3+a)}$
+
+{
+/* what about comments */
+string b
+}$
+
+Results:
+test1 - Worked as expected, no difficulties
+test2 - Worked, this one pointed out a bug I had in the IntExpr
+test3 - Worked
+test4 - Fails as expected
+test5 - Worked
+test6 - Fails, failed surprisingly well
+test7 - Fails, Pointed out a error catching bug where I didn't catch errors that happened before things began decending the trees
+test8 - Worked
+test9 - Worked
