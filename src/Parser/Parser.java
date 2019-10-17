@@ -21,7 +21,11 @@ public class Parser {
   private int programNo;
 
   /**
-   * Alan you like giving us brain damage.
+   * Alan you really like giving us brain damage. I'm going to omit the comment for the recursive
+   * calls otherwise I'd have a paragraph a piece, but in order to save me the trouble of having to
+   * write a brand new type of tree just for this project, I'm using Lists. I take a list, pass it
+   * off to my recursive method then tell it to fill it. Each recursive method slaps in all its
+   * terminals, and makes a new list for each non-terminal, then repeats the process.
    *
    * @param programNo The numerical identifier of which program is being parsed.
    * @param tokenList The list of tokens that has been returned from the Lexer.
@@ -52,7 +56,7 @@ public class Parser {
   }
 
   /**
-   * Start
+   * Program -> Block $
    */
   public ArrayList parse(ArrayList programList) {
     verboseWriter("parseProgram");
@@ -68,7 +72,7 @@ public class Parser {
   }
 
   /**
-   * stage 1
+   * Block -> { StmtList }
    */
   private ArrayList block(ArrayList blockList) {
     verboseWriter("block");
@@ -87,7 +91,7 @@ public class Parser {
   }
 
   /**
-   *
+   * StmtList -> Stmt StmtList | lambda
    */
   private ArrayList stmtList(ArrayList stmtList) {
     verboseWriter("statementList");
@@ -107,7 +111,7 @@ public class Parser {
   }
 
   /**
-   *
+   * Stmt -> PrintStmt | AssignStmt | VarDecl | WhileStmt | IfStmt | Block
    */
   private ArrayList stmt(ArrayList sList) {
     ArrayList subList = new ArrayList();
@@ -142,7 +146,7 @@ public class Parser {
   }
 
   /**
-   *
+   * PrintStmt -> print ( Expr )
    */
   private ArrayList printStmt(ArrayList printList) {
     verboseWriter("printStatement");
@@ -163,7 +167,7 @@ public class Parser {
   }
 
   /**
-   *
+   * AssignStmt -> id = Expr
    */
   private ArrayList assignStmt(ArrayList assignList) {
     verboseWriter("assignmentStatement");
@@ -183,7 +187,7 @@ public class Parser {
   }
 
   /**
-   *
+   * VarDecl -> type id
    */
   private ArrayList varDecl(ArrayList varDeclList) {
     verboseWriter("varDecl");
@@ -192,7 +196,7 @@ public class Parser {
 
       varDeclList.add("Type");
       varDeclList.add(type());
-      varDeclList.add("Variable Deceleration");
+      varDeclList.add("ID");
       varDeclList.add(id(idList));
     }
 
@@ -200,7 +204,7 @@ public class Parser {
   }
 
   /**
-   *
+   * WhileStmt -> while BoolExpr Block
    */
   private ArrayList whileStmt(ArrayList whileStmtList) {
     verboseWriter("whileStatement");
@@ -220,7 +224,7 @@ public class Parser {
   }
 
   /**
-   *
+   * IfStmt -> if BoolExpr Block
    */
   private ArrayList ifStmt(ArrayList ifStmtList) {
     verboseWriter("ifStatement");
@@ -240,7 +244,7 @@ public class Parser {
   }
 
   /**
-   *
+   * Expr -> IntExpr | StrExpr | BoolExpr | ID
    */
   private ArrayList expr(ArrayList exprList) {
     ArrayList subList = new ArrayList();
@@ -263,7 +267,7 @@ public class Parser {
   }
 
   /**
-   *
+   * IntExpr -> digit intOp Expr | digit
    */
   private ArrayList intExpr(ArrayList intExprList) {
     verboseWriter("intExpression");
@@ -285,7 +289,7 @@ public class Parser {
   }
 
   /**
-   *
+   * StrExpr -> " CharList "
    */
   private ArrayList strExpr(ArrayList strExprList) {
     verboseWriter("stringExpression");
@@ -304,7 +308,7 @@ public class Parser {
   }
 
   /**
-   *
+   * BoolExpr -> ( Expr BoolOp Expr ) | BoolVal
    */
   private ArrayList boolExpr(ArrayList boolExprList) {
     verboseWriter("booleanExpression");
@@ -332,7 +336,7 @@ public class Parser {
   }
 
   /**
-   *
+   * ID -> CharVal
    */
   private ArrayList id(ArrayList idList) {
     verboseWriter("id");
@@ -346,7 +350,7 @@ public class Parser {
   }
 
   /**
-   *
+   * CharList -> CharVal CharList | space CharList | lambda
    */
   private ArrayList charList(ArrayList charList) {
     ArrayList charList2 = new ArrayList();
@@ -371,7 +375,7 @@ public class Parser {
   }
 
   /**
-   *
+   * type -> int | string | boolean
    */
   private String type() {
     verboseWriter("type");
@@ -383,7 +387,7 @@ public class Parser {
   }
 
   /**
-   *
+   * charVal -> a | b | c | ... | z
    */
   private String charVal() {
     verboseWriter("characterValue");
@@ -395,7 +399,7 @@ public class Parser {
   }
 
   /**
-   *
+   * space -> " "
    */
   private String space() {
     verboseWriter("space");
@@ -407,7 +411,7 @@ public class Parser {
   }
 
   /**
-   *
+   * digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
    */
   private String digit() {
     verboseWriter("digit");
@@ -419,7 +423,7 @@ public class Parser {
   }
 
   /**
-   *
+   * boolOp -> == | !=
    */
   private String boolOp() {
     verboseWriter("booleanOperator");
@@ -431,7 +435,7 @@ public class Parser {
   }
 
   /**
-   *
+   * boolVal -> true | false
    */
   private String boolVal() {
     verboseWriter("booleanValue");
@@ -443,7 +447,7 @@ public class Parser {
   }
 
   /**
-   *
+   * intOp -> +
    */
   private String intOp() {
     verboseWriter("integerOperator");
@@ -520,11 +524,11 @@ public class Parser {
 
   private List printCST(List cont, int level) {
     for (int i = 0; i < cont.size(); i++) {
-      if(cont.get(i) instanceof Collection) {
-        printCST((List)cont.get(i), level+1);
+      if (cont.get(i) instanceof Collection) {
+        printCST((List) cont.get(i), level + 1);
       } else {
         int iter = 0;
-        while(iter < level) {
+        while (iter < level) {
           System.out.print("-");
           iter++;
         }
@@ -537,12 +541,18 @@ public class Parser {
 
   /**
    * Gets the CST
+   *
    * @return cst
    */
   public List getCST() {
     return cst;
   }
 
+  /**
+   * did it work?
+   *
+   * @return y or n
+   */
   public boolean success() {
     return success;
   }
