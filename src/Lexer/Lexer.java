@@ -376,10 +376,10 @@ public class Lexer {
    * @return false if the lex failed, true otherwise.
    */
   public boolean success() {
-    boolean success = false;
+    boolean success = true;
 
     if (errCount > 0) {
-      success = true;
+      success = false;
     }
 
     return success;

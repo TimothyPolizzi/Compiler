@@ -95,7 +95,7 @@ public class CompilerTester {
     String quoteTest = quote + twoLines + noEnd;
 
     // Test Here
-    Compiler comp = new Compiler(javaKeywords, true);
+    Compiler comp = new Compiler(alanComments, true);
   }
 
   /**
