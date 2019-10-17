@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 public class Parser {
   private List<Token> tokenList;
   private boolean verbose;
+  private boolean fail;
 
   /**
    * Alan you like giving us brain damage.
@@ -23,16 +24,26 @@ public class Parser {
   public Parser(int programNo, List<Token> tokenList, boolean verbose) {
     this.tokenList = tokenList;
     this.verbose = verbose;
+    fail = false;
 
     System.out.println("\nINFO Parser - Parsing program " + programNo + "...");
 
+    verboseWriter("parse");
+
     parse();
+
+    if(fail) {
+      System.out.println("\nINFO Parser - Parser failed with 1 error");
+    } else {
+      System.out.println("\nINFO Parser - Parse completed successfully");
+    }
   }
 
   /**
    * Start
    */
   public void parse() {
+    verboseWriter("parseProgram");
     if (qol("L_BRACE")) {
       block();
       match("EOP");
@@ -43,6 +54,7 @@ public class Parser {
    * stage 1
    */
   private void block() {
+    verboseWriter("block");
     if (qol("L_BRACE")) {
       match("L_BRACE");
       stmtList();
@@ -54,6 +66,7 @@ public class Parser {
    *
    */
   private void stmtList() {
+    verboseWriter("statementList");
     // Check if next token is: {,if, print, <char item>, int, char, boolean, while
     if (qol("L_BRACE|(PRINT|IF)_STMT|[a-z]|([ISB]_TYPE)|WHILE_LOOP")) {
       stmt();
@@ -64,6 +77,7 @@ public class Parser {
   }
 
   private void stmt() {
+    verboseWriter("statement");
     if (qol("PRINT_STMT")) {
       printStmt();
     } else if (qol("[a-z]")) {
@@ -80,6 +94,7 @@ public class Parser {
   }
 
   private void printStmt() {
+    verboseWriter("printStatement");
     if (qol("PRINT_STMT")) {
       match("PRINT_STMT");
       match("L_PAREN");
@@ -89,6 +104,7 @@ public class Parser {
   }
 
   private void assignStmt() {
+    verboseWriter("assignmentStatement");
     if (qol("[a-z]")) {
       id();
       match("ASSIGN_OP");
@@ -97,6 +113,7 @@ public class Parser {
   }
 
   private void varDecl() {
+    verboseWriter("varDecl");
     if (qol("[ISB]_TYPE")) {
       type();
       id();
@@ -104,6 +121,7 @@ public class Parser {
   }
 
   private void whileStmt() {
+    verboseWriter("whileStatement");
     if (qol("WHILE_LOOP")) {
       match("WHILE_LOOP");
       boolExpr();
@@ -112,6 +130,7 @@ public class Parser {
   }
 
   private void ifStmt() {
+    verboseWriter("ifStatement");
     if (qol("IF_STMT")) {
       match("IF_STMT");
       boolExpr();
@@ -120,6 +139,7 @@ public class Parser {
   }
 
   private void expr() {
+    verboseWriter("expression");
     if (qol("[0-9]")) {
       intExpr();
     } else if (qol("STRING")) {
@@ -132,6 +152,7 @@ public class Parser {
   }
 
   private void intExpr() {
+    verboseWriter("intExpression");
     if(qol("[0-9] +")) {
       digit();
       intOp();
@@ -142,6 +163,7 @@ public class Parser {
   }
 
   private void strExpr() {
+    verboseWriter("stringExpression");
     if(qol("STRING")) {
       match("STRING");
       charList();
@@ -150,6 +172,7 @@ public class Parser {
   }
 
   private void boolExpr() {
+    verboseWriter("booleanExpression");
     if(qol("L_PAREN")) {
       match("L_PAREN");
       expr();
@@ -162,12 +185,14 @@ public class Parser {
   }
 
   private void id() {
+    verboseWriter("id");
     if(qol("[a-z]")) {
       charVal();
     }
   }
 
   private void charList() {
+    verboseWriter("characterList");
     if(qol("[a-z]")) {
       charVal();
       charList();
@@ -180,42 +205,49 @@ public class Parser {
   }
 
   private void type() {
+    verboseWriter("type");
     if(qol("[ISB]_TYPE")) {
       // pop token
     }
   }
 
   private void charVal() {
+    verboseWriter("characterValue");
     if(qol("[a-z]")) {
       //pop token
     }
   }
 
   private void space() {
+    verboseWriter("space");
     if(qol(" ")) {
       match(" ");
     }
   }
 
   private void digit() {
+    verboseWriter("digit");
     if(qol("[0-9]")) {
       //pop token
     }
   }
 
   private void boolOp() {
+    verboseWriter("booleanOperator");
     if(qol("[NOT_]?EQUAL")) {
       //pop token
     }
   }
 
   private void boolVal() {
+    verboseWriter("booleanValue");
     if(qol("[TF]_BOOL")) {
       //pop token
     }
   }
 
   private void intOp() {
+    verboseWriter("integerOperator");
     if(qol("INT_OP")) {
       match("INT_OP");
     }
@@ -250,6 +282,16 @@ public class Parser {
    */
   private boolean qol(String regex) {
     return Pattern.matches(regex, peek(tokenList).getFlavor());
+  }
+
+  /**
+   * Prints the method that would be printed in verbose mode if the program is in verbose mode.
+   * @param method The name of the method that would be printed.
+   */
+  private void verboseWriter(String method) {
+    if(verbose){
+      System.out.println("DEBUG Parser - " + method + "()");
+    }
   }
 
 }
