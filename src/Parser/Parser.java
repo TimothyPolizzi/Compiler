@@ -1,6 +1,8 @@
 package Parser;
 
 import Lexer.Token;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -10,9 +12,11 @@ import java.util.regex.Pattern;
  * @author Tim Polizzi
  */
 public class Parser {
+
   private List<Token> tokenList;
   private boolean verbose;
   private boolean fail;
+  private List cst;
 
   /**
    * Alan you like giving us brain damage.
@@ -25,232 +29,426 @@ public class Parser {
     this.tokenList = tokenList;
     this.verbose = verbose;
     fail = false;
+    cst = new ArrayList();
 
     System.out.println("\nINFO Parser - Parsing program " + programNo + "...");
 
     verboseWriter("parse");
+    cst.add("Program");
+    ArrayList programList = new ArrayList();
 
-    parse();
+    cst.add(parse(programList));
 
-    if(fail) {
+    if (fail) {
       System.out.println("\nINFO Parser - Parser failed with 1 error");
     } else {
       System.out.println("\nINFO Parser - Parse completed successfully");
     }
+
+    getCST();
   }
 
   /**
    * Start
    */
-  public void parse() {
+  public ArrayList parse(ArrayList programList) {
     verboseWriter("parseProgram");
     if (qol("L_BRACE")) {
-      block();
+      ArrayList blockList = new ArrayList();
+
+      programList.add("Block");
+      programList.add(block(blockList));
       match("EOP");
+      programList.add("$");
     }
+    return programList;
   }
 
   /**
    * stage 1
    */
-  private void block() {
+  private ArrayList block(ArrayList blockList) {
     verboseWriter("block");
     if (qol("L_BRACE")) {
+      ArrayList stmtList = new ArrayList();
+
       match("L_BRACE");
-      stmtList();
+      blockList.add("{");
+      blockList.add("Statement List");
+      blockList.add(stmtList(stmtList));
       match("R_BRACE");
+      blockList.add("}");
     }
+
+    return blockList;
   }
 
   /**
    *
    */
-  private void stmtList() {
+  private ArrayList stmtList(ArrayList stmtList) {
     verboseWriter("statementList");
     // Check if next token is: {,if, print, <char item>, int, char, boolean, while
-    if (qol("L_BRACE|(PRINT|IF)_STMT|[a-z]|([ISB]_TYPE)|WHILE_LOOP")) {
-      stmt();
-      stmtList();
+    if (qol("L_BRACE|(PRINT|IF)_STMT|(CHAR|[a-z])|([ISB]_TYPE)|WHILE_LOOP")) {
+      ArrayList sList = new ArrayList();
+      ArrayList stmtList2 = new ArrayList();
+
+      stmtList.add("Statement");
+      stmtList.add(stmt(sList));
+      stmtList.add("Statement List");
+      stmtList.add(stmtList(stmtList2));
     } else if (qol("R_BRACE")) {
-      return;
+      // intentionally left blank for lambda set
     }
+    return stmtList;
   }
 
-  private void stmt() {
+  /**
+   *
+   */
+  private ArrayList stmt(ArrayList sList) {
+    ArrayList subList = new ArrayList();
     verboseWriter("statement");
     if (qol("PRINT_STMT")) {
-      printStmt();
-    } else if (qol("[a-z]")) {
-      assignStmt();
+
+      sList.add("Print Statement");
+      sList.add(printStmt(subList));
+    } else if (qol("[a-z]|CHAR")) {
+
+      sList.add("Assign Statement");
+      sList.add(assignStmt(subList));
     } else if (qol("[ISB]_TYPE")) {
-      varDecl();
+
+      sList.add("Variable Deceleration");
+      sList.add(varDecl(subList));
     } else if (qol("WHILE_LOOP")) {
-      whileStmt();
+
+      sList.add("While Statement");
+      sList.add(whileStmt(subList));
     } else if (qol("IF_STMT")) {
-      ifStmt();
+
+      sList.add("If Statement");
+      sList.add(ifStmt(subList));
     } else if (qol("L_BRACE")) {
-      block();
+
+      sList.add("Block");
+      sList.add(block(subList));
     }
+
+    return sList;
   }
 
-  private void printStmt() {
+  /**
+   *
+   */
+  private ArrayList printStmt(ArrayList printList) {
     verboseWriter("printStatement");
     if (qol("PRINT_STMT")) {
+      ArrayList exprList = new ArrayList();
+
       match("PRINT_STMT");
+      printList.add("print");
       match("L_PAREN");
-      expr();
+      printList.add("(");
+      printList.add("Expression");
+      printList.add(expr(exprList));
       match("R_PAREN");
+      printList.add(")");
     }
+
+    return printList;
   }
 
-  private void assignStmt() {
+  /**
+   *
+   */
+  private ArrayList assignStmt(ArrayList assignList) {
     verboseWriter("assignmentStatement");
-    if (qol("[a-z]")) {
-      id();
+    if (qol("[a-z]|CHAR")) {
+      ArrayList idList = new ArrayList();
+      ArrayList exprList = new ArrayList();
+
+      assignList.add("ID");
+      assignList.add(id(idList));
       match("ASSIGN_OP");
-      expr();
+      assignList.add("=");
+      assignList.add("Expression");
+      assignList.add(expr(exprList));
     }
+
+    return assignList;
   }
 
-  private void varDecl() {
+  /**
+   *
+   */
+  private ArrayList varDecl(ArrayList varDeclList) {
     verboseWriter("varDecl");
     if (qol("[ISB]_TYPE")) {
-      type();
-      id();
+      ArrayList idList = new ArrayList();
+
+      varDeclList.add("Type");
+      varDeclList.add(type());
+      varDeclList.add("Variable Deceleration");
+      varDeclList.add(id(idList));
     }
+
+    return varDeclList;
   }
 
-  private void whileStmt() {
+  /**
+   *
+   */
+  private ArrayList whileStmt(ArrayList whileStmtList) {
     verboseWriter("whileStatement");
     if (qol("WHILE_LOOP")) {
+      ArrayList boolExprList = new ArrayList();
+      ArrayList blockList = new ArrayList();
+
       match("WHILE_LOOP");
-      boolExpr();
-      block();
+      whileStmtList.add("while");
+      whileStmtList.add("Boolean Expression");
+      whileStmtList.add(boolExpr(boolExprList));
+      whileStmtList.add("Block");
+      whileStmtList.add(block(blockList));
     }
+
+    return whileStmtList;
   }
 
-  private void ifStmt() {
+  /**
+   *
+   */
+  private ArrayList ifStmt(ArrayList ifStmtList) {
     verboseWriter("ifStatement");
     if (qol("IF_STMT")) {
+      ArrayList boolExprList = new ArrayList();
+      ArrayList blockList = new ArrayList();
+
       match("IF_STMT");
-      boolExpr();
-      block();
+      ifStmtList.add("if");
+      ifStmtList.add("Boolean Expression");
+      ifStmtList.add(boolExpr(boolExprList));
+      ifStmtList.add("Block");
+      ifStmtList.add(block(blockList));
     }
+
+    return ifStmtList;
   }
 
-  private void expr() {
+  /**
+   *
+   */
+  private ArrayList expr(ArrayList exprList) {
+    ArrayList subList = new ArrayList();
     verboseWriter("expression");
     if (qol("[0-9]")) {
-      intExpr();
+      exprList.add("Integer Expression");
+      exprList.add(intExpr(subList));
     } else if (qol("STRING")) {
-      strExpr();
+      exprList.add("String Expression");
+      exprList.add(strExpr(subList));
     } else if (qol("L_PAREN|[TF]_BOOL")) {
-      boolExpr();
+      exprList.add("Boolean Expression");
+      exprList.add(boolExpr(subList));
     } else if (qol("[a-z]")) {
-      id();
+      exprList.add("ID");
+      exprList.add(id(subList));
     }
+
+    return exprList;
   }
 
-  private void intExpr() {
+  /**
+   *
+   */
+  private ArrayList intExpr(ArrayList intExprList) {
     verboseWriter("intExpression");
-    if(qol("[0-9] +")) {
-      digit();
-      intOp();
-      expr();
-    } else if(qol("[0-9]")) {
-      digit();
+    if (qol("[0-9] +")) {
+      ArrayList exprList = new ArrayList();
+
+      intExprList.add("Digit");
+      intExprList.add(digit());
+      intExprList.add("Integer Operator");
+      intExprList.add(intOp());
+      intExprList.add("Expression");
+      intExprList.add(expr(exprList));
+    } else if (qol("[0-9]")) {
+      intExprList.add("Digit");
+      intExprList.add(digit());
     }
+
+    return intExprList;
   }
 
-  private void strExpr() {
+  /**
+   *
+   */
+  private ArrayList strExpr(ArrayList strExprList) {
     verboseWriter("stringExpression");
-    if(qol("STRING")) {
+    if (qol("STRING")) {
+      ArrayList charList = new ArrayList();
+
       match("STRING");
-      charList();
+      strExprList.add("\"");
+      strExprList.add("Character List");
+      strExprList.add(charList(charList));
       match("STRING");
+      strExprList.add("\"");
     }
+
+    return strExprList;
   }
 
-  private void boolExpr() {
+  /**
+   *
+   */
+  private ArrayList boolExpr(ArrayList boolExprList) {
     verboseWriter("booleanExpression");
-    if(qol("L_PAREN")) {
+    if (qol("L_PAREN")) {
+      ArrayList exprList1 = new ArrayList();
+      ArrayList exprList2 = new ArrayList();
+
       match("L_PAREN");
-      expr();
-      boolOp();
-      expr();
+      boolExprList.add("(");
+      boolExprList.add("Expression");
+      boolExprList.add(expr(exprList1));
+      boolExprList.add("Boolean Operator");
+      boolExprList.add(boolOp());
+      boolExprList.add("Expression");
+      boolExprList.add(expr(exprList2));
       match("R_PAREN");
+      boolExprList.add(")");
     } else if (qol("[TF]_BOOL")) {
-      boolVal();
+
+      boolExprList.add("Boolean Value");
+      boolExprList.add(boolVal());
     }
+
+    return boolExprList;
   }
 
-  private void id() {
+  /**
+   *
+   */
+  private ArrayList id(ArrayList idList) {
     verboseWriter("id");
-    if(qol("[a-z]")) {
-      charVal();
+    if (qol("[a-z]|CHAR")) {
+
+      idList.add("Character Value");
+      idList.add(charVal());
     }
+
+    return idList;
   }
 
-  private void charList() {
+  /**
+   *
+   */
+  private ArrayList charList(ArrayList charList) {
+    ArrayList charList2 = new ArrayList();
     verboseWriter("characterList");
-    if(qol("[a-z]")) {
-      charVal();
-      charList();
+    if (qol("[a-z]|CHAR")) {
+
+      charList.add("Character Value");
+      charList.add(charVal());
+      charList.add("Character List");
+      charList.add(charList(charList2));
     } else if (qol(" ")) {
-      space();
-      charList();
+
+      charList.add("Space");
+      charList.add(space());
+      charList.add("Character List");
+      charList.add(charList(charList2));
     } else if (qol("STRING")) {
-      return;
+      //intentionally left blank for lambda set
     }
+
+    return charList;
   }
 
-  private void type() {
+  /**
+   *
+   */
+  private String type() {
     verboseWriter("type");
-    if(qol("[ISB]_TYPE")) {
-      // pop token
+    if (qol("[ISB]_TYPE")) {
+      //TODO:pop token
+      return pop().getOriginal();
     }
+    return null;
   }
 
-  private void charVal() {
+  /**
+   *
+   */
+  private String charVal() {
     verboseWriter("characterValue");
-    if(qol("[a-z]")) {
+    if (qol("[a-z]|CHAR")) {
       //pop token
+      return pop().getOriginal();
     }
+    return null;
   }
 
-  private void space() {
+  /**
+   *
+   */
+  private String space() {
     verboseWriter("space");
-    if(qol(" ")) {
+    if (qol(" ")) {
       match(" ");
+      return " ";
     }
+    return null;
   }
 
-  private void digit() {
+  /**
+   *
+   */
+  private String digit() {
     verboseWriter("digit");
-    if(qol("[0-9]")) {
+    if (qol("[0-9]")) {
       //pop token
+      return pop().getOriginal();
     }
+    return null;
   }
 
-  private void boolOp() {
+  /**
+   *
+   */
+  private String boolOp() {
     verboseWriter("booleanOperator");
-    if(qol("[NOT_]?EQUAL")) {
+    if (qol("[NOT_]?EQUAL")) {
       //pop token
+      return pop().getOriginal();
     }
+    return null;
   }
 
-  private void boolVal() {
+  /**
+   *
+   */
+  private String boolVal() {
     verboseWriter("booleanValue");
-    if(qol("[TF]_BOOL")) {
+    if (qol("[TF]_BOOL")) {
       //pop token
+      return pop().getOriginal();
     }
+    return null;
   }
 
-  private void intOp() {
+  /**
+   *
+   */
+  private String intOp() {
     verboseWriter("integerOperator");
-    if(qol("INT_OP")) {
+    if (qol("INT_OP")) {
       match("INT_OP");
+      return "+";
     }
+    return null;
   }
 
   /**
@@ -260,12 +458,15 @@ public class Parser {
     Token currentToken = peek(tokenList);
     if (Pattern.matches(toMatch, currentToken.getFlavor())) {
       //pop topmost token off of stack
+      pop();
+    } else {
+      System.out.println(
+          "ERROR Parser - Expected [" + toMatch + "] got [" + currentToken.getFlavor()
+              + "] with value '" + currentToken.getOriginal() + "' on line " + currentToken
+              .getLine());
+      fail = true;
+      //clears the stack
     }
-    System.out.println(
-        "ERROR Parser - Expected [" + toMatch + "] got [" + currentToken.getFlavor()
-            + "] with value '" + currentToken.getOriginal() + "' on line " + currentToken
-            .getLine());
-    //clears the stack
     return null;
   }
 
@@ -278,6 +479,7 @@ public class Parser {
 
   /**
    * This is a method to make the code neater and stop my hair loss.
+   *
    * @return A boolean that determines if a given regex matches the top of the tokenList
    */
   private boolean qol(String regex) {
@@ -286,12 +488,38 @@ public class Parser {
 
   /**
    * Prints the method that would be printed in verbose mode if the program is in verbose mode.
+   *
    * @param method The name of the method that would be printed.
    */
   private void verboseWriter(String method) {
-    if(verbose){
+    if (verbose) {
       System.out.println("DEBUG Parser - " + method + "()");
     }
   }
 
+  /**
+   * Pops the top item off of token list
+   *
+   * @return The topmost token of tokenlist
+   */
+  private Token pop() {
+    return tokenList.remove(0);
+  }
+
+
+  public void getCST() {
+    getCST2(cst);
+  }
+
+  private List getCST2(List cont) {
+    for (int i = 0; i < cont.size(); i++) {
+      if(cont.get(i) instanceof Collection) {
+        getCST2((List)cont.get(i));
+      } else {
+        System.out.println(cont.get(i));
+      }
+    }
+
+    return
+  }
 }
