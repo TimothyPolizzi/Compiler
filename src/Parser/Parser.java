@@ -44,8 +44,6 @@ public class Parser {
     } else {
       System.out.println("\nINFO Parser - Parse completed successfully");
     }
-
-    getCST();
   }
 
   /**
@@ -508,18 +506,23 @@ public class Parser {
 
 
   public void getCST() {
-    getCST2(cst);
+    getCST2(cst, 0);
   }
 
-  private List getCST2(List cont) {
+  private List getCST2(List cont, int level) {
     for (int i = 0; i < cont.size(); i++) {
       if(cont.get(i) instanceof Collection) {
-        getCST2((List)cont.get(i));
+        getCST2((List)cont.get(i), level+1);
       } else {
+        int iter = 0;
+        while(iter < level) {
+          System.out.print("-");
+          iter++;
+        }
         System.out.println(cont.get(i));
       }
     }
 
-    return
+    return null;
   }
 }
