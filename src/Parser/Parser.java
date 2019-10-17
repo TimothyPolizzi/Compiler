@@ -17,6 +17,7 @@ public class Parser {
   private boolean verbose;
   private boolean fail;
   private List cst;
+  private int errCount;
   private boolean success;
   private int programNo;
 
@@ -38,6 +39,7 @@ public class Parser {
     fail = false;
     cst = new ArrayList();
     success = true;
+    errCount = 0;
 
     System.out.println("\nINFO Parser - Parsing program " + programNo + "...");
 
@@ -48,7 +50,7 @@ public class Parser {
     cst.add(parse(programList));
 
     if (fail) {
-      System.out.println("\nINFO Parser - Parser failed with 1 error");
+      System.out.println("\nINFO Parser - Parser failed with " + errCount + " error(s)");
       success = false;
     } else {
       System.out.println("\nINFO Parser - Parse completed successfully");
@@ -67,6 +69,8 @@ public class Parser {
       programList.add(block(blockList));
       match("EOP");
       programList.add("$");
+    } else {
+      match("L_BRACE");
     }
     return programList;
   }
@@ -249,7 +253,7 @@ public class Parser {
   private ArrayList expr(ArrayList exprList) {
     ArrayList subList = new ArrayList();
     verboseWriter("expression");
-    if (qol("[0-9]")) {
+    if (qol("INT|[0-9]")) {
       exprList.add("Integer Expression");
       exprList.add(intExpr(subList));
     } else if (qol("STRING")) {
@@ -258,7 +262,7 @@ public class Parser {
     } else if (qol("L_PAREN|[TF]_BOOL")) {
       exprList.add("Boolean Expression");
       exprList.add(boolExpr(subList));
-    } else if (qol("[a-z]")) {
+    } else if (qol("[a-z]|CHAR")) {
       exprList.add("ID");
       exprList.add(id(subList));
     }
@@ -271,7 +275,8 @@ public class Parser {
    */
   private ArrayList intExpr(ArrayList intExprList) {
     verboseWriter("intExpression");
-    if (qol("[0-9] +")) {
+    if (qol("[0-9]|INT") && Pattern
+        .matches("\\+|INT_OP", tokenList.get(1).getFlavor())) {
       ArrayList exprList = new ArrayList();
 
       intExprList.add("Digit");
@@ -280,7 +285,7 @@ public class Parser {
       intExprList.add(intOp());
       intExprList.add("Expression");
       intExprList.add(expr(exprList));
-    } else if (qol("[0-9]")) {
+    } else if (qol("[0-9]|INT")) {
       intExprList.add("Digit");
       intExprList.add(digit());
     }
@@ -415,7 +420,7 @@ public class Parser {
    */
   private String digit() {
     verboseWriter("digit");
-    if (qol("[0-9]")) {
+    if (qol("[0-9]|INT")) {
       //pop token
       return pop().getOriginal();
     }
@@ -427,7 +432,7 @@ public class Parser {
    */
   private String boolOp() {
     verboseWriter("booleanOperator");
-    if (qol("[NOT_]?EQUAL")) {
+    if (qol("(NOT_)?EQUAL")) {
       //pop token
       return pop().getOriginal();
     }
@@ -472,6 +477,7 @@ public class Parser {
               + "] with value '" + currentToken.getOriginal() + "' on line " + currentToken
               .getLine());
       fail = true;
+      errCount++;
       //clears the stack
     }
     return null;

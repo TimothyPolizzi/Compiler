@@ -5,9 +5,9 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-    individualTests();
+//    individualTests();
 //    readFromFileTest();
-//    stdInRead(true);
+    stdInRead(true);
   }
 
   /**
@@ -74,28 +74,16 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
-    String text = "Tim is here$";
-    String quote = "\"I enjoy food\" 123$";
-    String quoteNoEnd = "\"Big Yoshi$";
-    String integer = "123456790$";
-    String decimal = "123.456$";
-    String keywords = "int a = 123; for(int i = 0; i < 10; i++) { print(\"hi\");};$";
-    String javaKeywords = "int abc = 123; \nfor(int incr = 0; incr < 10; incr++) {\nif( a != b) {"
-        + "\n System.out.print(\"hi\")\n}\n}$";
-    String noSpaces = "abcint123printwhile";
-    String twoLines = "{\"two\nlines\"}$";
-    String noEnd = "{a = \"unterminated string }$";
+    String twoLines = "{s=\"two\nlines\"}$";
+    String noEnd = "{a = \"unterminated string }$"; // Lexer Breaks
 
     String alanBreakCaps = "{print(\"No Caps Mister Bond\")}$";
     String alanBreakNums = "{print(\"no digits 007\")}$";
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
-    String multiProgram = integer + decimal + quote + javaKeywords + noSpaces;
-    String quoteTest = quote + twoLines + noEnd;
-
     // Test Here
-    Compiler comp = new Compiler(alanComments, true);
+    Compiler comp = new Compiler(noEnd, true);
   }
 
   /**
