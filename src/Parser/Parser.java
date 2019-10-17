@@ -17,6 +17,8 @@ public class Parser {
   private boolean verbose;
   private boolean fail;
   private List cst;
+  private boolean success;
+  private int programNo;
 
   /**
    * Alan you like giving us brain damage.
@@ -28,8 +30,10 @@ public class Parser {
   public Parser(int programNo, List<Token> tokenList, boolean verbose) {
     this.tokenList = tokenList;
     this.verbose = verbose;
+    this.programNo = programNo;
     fail = false;
     cst = new ArrayList();
+    success = true;
 
     System.out.println("\nINFO Parser - Parsing program " + programNo + "...");
 
@@ -41,6 +45,7 @@ public class Parser {
 
     if (fail) {
       System.out.println("\nINFO Parser - Parser failed with 1 error");
+      success = false;
     } else {
       System.out.println("\nINFO Parser - Parse completed successfully");
     }
@@ -504,15 +509,19 @@ public class Parser {
     return tokenList.remove(0);
   }
 
+  /**
+   * Prints the CST in a human readable form
+   */
+  public void printCST() {
+    System.out.println("\nINFO Parser - CST for program " + programNo + "...");
 
-  public void getCST() {
-    getCST2(cst, 0);
+    printCST(cst, 0);
   }
 
-  private List getCST2(List cont, int level) {
+  private List printCST(List cont, int level) {
     for (int i = 0; i < cont.size(); i++) {
       if(cont.get(i) instanceof Collection) {
-        getCST2((List)cont.get(i), level+1);
+        printCST((List)cont.get(i), level+1);
       } else {
         int iter = 0;
         while(iter < level) {
@@ -524,5 +533,17 @@ public class Parser {
     }
 
     return null;
+  }
+
+  /**
+   * Gets the CST
+   * @return cst
+   */
+  public List getCST() {
+    return cst;
+  }
+
+  public boolean success() {
+    return success;
   }
 }

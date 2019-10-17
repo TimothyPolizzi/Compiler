@@ -19,10 +19,11 @@ public class Compiler {
       Lexer lex = new Lexer(program, iter, verbose);
       if(lex.success()) {
         Parser parse = new Parser(iter, lex.getTokenList(), verbose);
-//        if (parse.success()) {
+        if (parse.success()) {
+          parse.printCST();
 //          // TODO: Semantic Analysis
 //          // TODO: Code Gen
-//        }
+        }
       }
 
       iter++;
