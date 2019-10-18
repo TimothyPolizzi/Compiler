@@ -70,24 +70,35 @@ public class SyntaxTree {
     int depth = 0;
     String toReturn = root.getVal().toString() + "\n";
 
-    toReturn += dft(toReturn, childList, depth);
+    toReturn += dft(childList, depth);
 
     return toReturn;
   }
 
-  private String dft(String toReturn, List children, int depth) {
+  private String dft(List children, int depth) {
+    String toReturn = "";
     depth++;
+
     for (Object child : children) {
-      if (child instanceof Node) {
-        return dft(toReturn, ((Node)child).getChildren(), depth);
+
+      if (((Node) child).getChildren().size() > 0) {
+        toReturn += addDashes(depth) + ((Node) child).getVal() + "\n";
+        toReturn += dft(((Node) child).getChildren(), depth);
+
       } else {
-        int j = 0;
-        while (j < depth) {
-          toReturn += "-";
-          j++;
-        }
-        toReturn += child.toString() + "\n";
+        toReturn += addDashes(depth) + ((Node) child).getVal() + "\n";
       }
+    }
+    return toReturn;
+  }
+
+  private String addDashes(int depth) {
+    String toReturn = "";
+
+    int j = 0;
+    while (j < depth) {
+      toReturn += "-";
+      j++;
     }
 
     return toReturn;
