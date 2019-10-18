@@ -78,15 +78,15 @@ public class SyntaxTree {
   private String dft(String toReturn, List children, int depth) {
     depth++;
     for (Object child : children) {
-      if (child instanceof List) {
-        toReturn += dft(toReturn, (List) child, depth);
+      if (child instanceof Node) {
+        return dft(toReturn, ((Node)child).getChildren(), depth);
       } else {
         int j = 0;
         while (j < depth) {
           toReturn += "-";
           j++;
         }
-        toReturn += child + "\n";
+        toReturn += child.toString() + "\n";
       }
     }
 

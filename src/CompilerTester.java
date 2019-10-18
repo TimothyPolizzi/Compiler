@@ -5,8 +5,8 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-//    individualTests();
-    readFromFileTest();
+    individualTests();
+//    readFromFileTest();
 //    stdInRead(true);
   }
 
@@ -83,7 +83,7 @@ public class CompilerTester {
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
     // Test Here
-    Compiler comp = new Compiler(noEnd, true);
+    Compiler comp = new Compiler(alanComments, true);
   }
 
   /**

@@ -18,7 +18,7 @@ public class Compiler {
       if(lex.success()) {
         Parser parse = new Parser(iter, lex.getTokenList(), verbose);
         if (parse.success()) {
-          parse.printCST();
+          parse.printTree();
 //          // TODO: Semantic Analysis
 //          // TODO: Code Gen
         }
