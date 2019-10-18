@@ -1,5 +1,3 @@
-package Lexer;
-
 import java.util.regex.Pattern;
 
 public class Token {

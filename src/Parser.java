@@ -1,6 +1,3 @@
-package Parser;
-
-import Lexer.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -20,6 +17,7 @@ public class Parser {
   private int errCount;
   private boolean success;
   private int programNo;
+  private SyntaxTree tree;
 
   /**
    * Alan you really like giving us brain damage. I'm going to omit the comment for the recursive
