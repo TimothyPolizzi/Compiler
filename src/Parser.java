@@ -39,7 +39,7 @@ public class Parser {
     parse();
 
     if (fail) {
-      System.out.println("\nINFO Parser - Parser failed with " + errCount + " error(s)");
+      System.out.println("INFO Parser - Parser failed with " + errCount + " error(s)");
       success = false;
     } else {
       System.out.println("INFO Parser - Parse completed successfully");

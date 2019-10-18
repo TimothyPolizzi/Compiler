@@ -5,9 +5,9 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-    individualTests();
+//    individualTests();
 //    readFromFileTest();
-//    stdInRead(true);
+    stdInRead(true);
   }
 
   /**
