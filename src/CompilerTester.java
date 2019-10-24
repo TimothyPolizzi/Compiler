@@ -6,8 +6,8 @@ public class CompilerTester {
 
   public static void main(String[] args) {
 //    individualTests();
-//    readFromFileTest();
-    stdInRead(true);
+    readFromFileTest();
+//    stdInRead(true);
   }
 
   /**
@@ -82,8 +82,10 @@ public class CompilerTester {
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
+    String alanParseIssue1 = "";
+
     // Test Here
-    Compiler comp = new Compiler(alanComments, true);
+    Compiler comp = new Compiler(alanParseIssue1, true);
   }
 
   /**
