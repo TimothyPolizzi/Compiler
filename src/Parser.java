@@ -382,7 +382,7 @@ public class Parser {
    */
   private SyntaxTree digit() {
     verboseWriter("digit");
-    SyntaxTree digitTree = new SyntaxTree("digit");
+    SyntaxTree digitTree = new SyntaxTree("intVal");
 
     if (qol("[0-9]|INT")) {
       digitTree.add(pop().getOriginal());
