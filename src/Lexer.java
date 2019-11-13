@@ -129,6 +129,7 @@ public class Lexer {
           quoteLoop++;
         }
 
+        // This is for handling the multiline quotes
         boolean cont = true;
         while (cont) {
           if (Pattern.matches("\"", Character.toString(charList[quoteLoop]))) {
@@ -165,7 +166,7 @@ public class Lexer {
 
         current = quoteLoop;
 
-        // Check if it is a legal character or integer or '.' (for doubles)
+        // Check if it is a legal character or integer (NO DOUBLES!!!!)
       } else if (legalVal(currentChar)) {
         int start = current;
         lastGood = current + 1;
@@ -294,13 +295,10 @@ public class Lexer {
   private boolean isNumber(String toCheck) {
     // Integers are any number, without leading zeros
     String intRegex = "0|([1-9]\\d*)";
-    // Doubles may are integers with a '.' followed by any digits
-    String doubleRegex = intRegex + "\\.\\d+";
 
-    String numberRegex = intRegex + "|" + doubleRegex;
     boolean toReturn = false;
 
-    if (Pattern.matches(numberRegex, toCheck)) {
+    if (Pattern.matches(intRegex, toCheck)) {
       toReturn = true;
     }
 

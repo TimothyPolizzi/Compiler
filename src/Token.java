@@ -29,14 +29,13 @@ public class Token {
     //So the double and less/greater than or equal to are unused but I'm leaving them in. Just in case.
 
     String regexInt = "0|[1-9][0-9]*";
-    String regexDouble = regexInt + "\\.[0-9]*";
     String regexChar = "[a-z]";
 
     String[] regexArr = {"\\$", "\\{", "}", "print", "\\(", "\\)", "=", "while", "if", "int",
-        "string", "boolean", regexInt, regexDouble, regexChar, "\"", "true", "false", " ", "==",
+        "string", "boolean", regexInt, regexChar, "\"", "true", "false", " ", "==",
         "!=", "\\+", "<", ">", ">=", "<="};
     String[] flavors = {"EOP", "L_BRACE", "R_BRACE", "PRINT_STMT", "L_PAREN", "R_PAREN",
-        "ASSIGN_OP", "WHILE_LOOP", "IF_STMT", "I_TYPE", "S_TYPE", "B_TYPE", "INT", "DOUBLE",
+        "ASSIGN_OP", "WHILE_LOOP", "IF_STMT", "I_TYPE", "S_TYPE", "B_TYPE", "INT",
         "CHAR", "STRING", "T_BOOL", "F_BOOL", "SPACE", "EQUAL", "NOT_EQUAL", "INT_OP", "L_BOOL",
         "G_BOOL", "GE_BOOL", "LE_BOOL"};
 
