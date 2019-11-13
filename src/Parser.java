@@ -95,7 +95,7 @@ public class Parser {
     } else if (qol("R_BRACE")) {
       // intentionally left blank for lambda set
     }
-    
+
     return stmtListTree;
   }
 
