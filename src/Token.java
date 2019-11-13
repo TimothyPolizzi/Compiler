@@ -33,11 +33,10 @@ public class Token {
 
     String[] regexArr = {"\\$", "\\{", "}", "print", "\\(", "\\)", "=", "while", "if", "int",
         "string", "boolean", regexInt, regexChar, "\"", "true", "false", " ", "==",
-        "!=", "\\+", "<", ">"};
+        "!=", "\\+"};
     String[] flavors = {"EOP", "L_BRACE", "R_BRACE", "PRINT_STMT", "L_PAREN", "R_PAREN",
         "ASSIGN_OP", "WHILE_LOOP", "IF_STMT", "I_TYPE", "S_TYPE", "B_TYPE", "INT",
-        "CHAR", "STRING", "T_BOOL", "F_BOOL", "SPACE", "EQUAL", "NOT_EQUAL", "INT_OP", "L_BOOL",
-        "G_BOOL"};
+        "CHAR", "STRING", "T_BOOL", "F_BOOL", "SPACE", "EQUAL", "NOT_EQUAL", "INT_OP"};
 
     if (string) {
       if (Pattern.matches(regexChar + "| ", original)) {
