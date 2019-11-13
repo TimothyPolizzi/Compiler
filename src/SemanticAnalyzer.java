@@ -1,3 +1,5 @@
+import java.util.List;
+
 /**
  * A Semantic Analyzer for the SAD Compiler for Alan Labouseur's compilers class.
  *
@@ -19,6 +21,8 @@ public class SemanticAnalyzer {
   public SemanticAnalyzer(SyntaxTree cst) {
     this.cst = cst;
     symbols = new SymbolTable();
+
+    generateAST();
   }
 
   /**
@@ -27,7 +31,21 @@ public class SemanticAnalyzer {
    * @return A SyntaxTree containing the AST generated from the given CST.
    */
   public SyntaxTree generateAST() {
+    Node root = cst.getRoot();
+
     return null;
+  }
+
+  private void descendTree(Node root) {
+    List<Node> kids = root.getChildren();
+    int i = 0;
+
+    while(kids.size() > 0) {
+      descendTree(kids.get(i));
+      i++;
+    }
+
+
   }
 
   /**
