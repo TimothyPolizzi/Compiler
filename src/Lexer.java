@@ -139,6 +139,7 @@ public class Lexer {
             cont = false;
             System.out.println("WARNING Lexer - Missing EndQuote Character '\"'");
             warnCount++;
+            multiLineQuote = false;
           } else if (Pattern.matches("\n", Character.toString(charList[quoteLoop]))) {
             multiLineQuote = true;
             quoteLoop++;
