@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Compiler {
 
@@ -16,11 +17,16 @@ public class Compiler {
     for (String program : programs) {
       Lexer lex = new Lexer(program, iter, verbose);
       if(lex.success()) {
-        Parser parse = new Parser(iter, lex.getTokenList(), verbose);
+        ArrayList<Token> parseTokens = new ArrayList<>();
+        Collections.copy(lex.getTokenList(), parseTokens);
+        Parser parse = new Parser(iter, parseTokens, verbose);
         if (parse.success()) {
           parse.printTree();
-//          // TODO: Semantic Analysis
-//          // TODO: Code Gen
+          ArrayList<Token> analysisTokens = new ArrayList<>();
+          SemanticAnalyzer analyzer = new SemanticAnalyzer(analysisTokens);
+//          if(analyzer.success()) {
+            // TODO: Code Gen
+//          }
         }
       }
 
