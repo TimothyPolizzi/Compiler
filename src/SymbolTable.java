@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * An implementation of a symbol table for the SAD Compiler for Alan Labouseur's compilers class.
@@ -48,50 +49,24 @@ public class SymbolTable {
   }
 
   /**
-   * A private item that is used to store symbols in the table.
+   * Searches the SymbolTable for any instances of a given symbol.
+   *
+   * @param symbol The symbol that is being searched for.
+   * @return The list of symbols that have been found.
    */
-  private class SymbolItem {
+  public List<SymbolItem> checkForSymbol(String symbol) {
+    List<SymbolItem> foundList = new ArrayList<>();
 
-    private String var;
-    private String type;
-    private int scope;
-    private int pos;
-
-    /**
-     * Creates a SymbolItem and requires the basic information of the symbol to be stored.
-     *
-     * @param var The string name and identifier of the variable that is to be stored.
-     * @param type A string that shows the type of the variable stored.
-     * @param scope The integer representing the scope that the variable is located in.
-     * @param pos The integer containing the line number at which the symbol is represented on.
-     */
-    public SymbolItem(String var, String type, int scope, int pos) {
-      this.var = var;
-      this.type = type;
-      this.scope = scope;
-      this.pos = pos;
+    for (SymbolItem item : staticTable) {
+      if (item.getVar().equals(symbol)) {
+        foundList.add(item);
+      }
     }
 
-    public String getVar() {
-      return var;
-    }
+    return foundList;
+  }
 
-    public int getPos() {
-      return pos;
-    }
-
-    public int getScope() {
-      return scope;
-    }
-
-    /**
-     * Returns the string of a SymbolItem
-     *
-     * @return The string containing the symbol item
-     */
-    public String toString() {
-      String toReturn = String.format("%1$-6s| %2$-6s| %3$-6d| %4$-6d", var, type, scope, pos);
-      return toReturn;
-    }
+  public ArrayList<SymbolItem> getList() {
+    return staticTable;
   }
 }
