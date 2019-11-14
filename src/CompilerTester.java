@@ -5,8 +5,8 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-//    individualTests();
-    readFromFileTest();
+    individualTests();
+//    readFromFileTest();
 //    stdInRead(true);
   }
 
@@ -74,6 +74,10 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
+//    SymbolTable s = new SymbolTable();
+//    s.newSymbol("a", "int", 0, 2);
+//    s.newSymbol("b", "char", 1, 4);
+
     String twoLines = "{s=\"two\nlines\"}$";
     String noEnd = "{a = \"unterminated string }$"; // Lexer Breaks
 
@@ -82,10 +86,11 @@ public class CompilerTester {
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
-    String alanParseIssue1 = "";
+    String alanParseIssue1 = "{int i\ni = 1}$";
 
     // Test Here
-    Compiler comp = new Compiler(alanParseIssue1, true);
+    Compiler comp = new Compiler(alanParseIssue1, false);
+//    System.out.println(s.toString());
   }
 
   /**
