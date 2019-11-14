@@ -90,9 +90,10 @@ public class CompilerTester {
     String stringAnaly2 = "{string x\nx=1}$";
     String stringAnaly3 = "{string x\nx=1+\"abc\"}$";
     String stringAnaly4 = "{string i\nx=1}$";
+    String pleaseDont = "{int i i = \"abc\"}";
 
     // Test Here
-    Compiler comp = new Compiler(stringAnaly2 +stringAnaly3, false);
+    Compiler comp = new Compiler(pleaseDont, false);
 //    System.out.println(s.toString());
   }
 

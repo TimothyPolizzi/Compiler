@@ -360,10 +360,12 @@ public class SemanticAnalyzer {
         }
       }
 
+      //case where there is a declared string being initialized to not a string
       if(types != null && types.get(0) != null ) {
         return assignOpError(id);
       }
 
+      // . . . ngl I forgot what this one breaks
       if (types == null && leaves.size() > 1) {
         return assignOpError(id);
       }
