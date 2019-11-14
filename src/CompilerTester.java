@@ -86,7 +86,7 @@ public class CompilerTester {
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
-    String alanParseIssue1 = "{int i\ni = 1}$";
+    String alanParseIssue1 = "{string x\nx=1+\"abc\"}$";
 
     // Test Here
     Compiler comp = new Compiler(alanParseIssue1, false);
