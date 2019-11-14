@@ -67,7 +67,7 @@ public class SemanticAnalyzer {
       match("L_BRACE");
     }
 
-    scope --;
+    scope--;
     match("R_BRACE");
 
     return blockTree;
@@ -135,7 +135,7 @@ public class SemanticAnalyzer {
       exprTokens = expr(assignStmtTree); //Value the variable is to be assigned to
     }
     typeCheck(idToken, exprTokens, assignStmtTree.getRoot());
-    symbols.activeSymbol(idToken.getOriginal(), scope).setVal(exprTokens.toString());
+    symbols.activeSymbol(idToken.getOriginal(), scope).setVal(slapTogether(exprTokens));
 
     return assignStmtTree;
   }
@@ -154,7 +154,8 @@ public class SemanticAnalyzer {
       typeToken = terminal(varDeclTree); //The type of the declared variable
       idToken = terminal(varDeclTree); //Name of the declared variable
       checkScope(idToken, typeToken);
-      symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), null, scope, idToken.getLine());
+      symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), null, scope,
+          idToken.getLine());
     }
 
     return varDeclTree;
@@ -336,8 +337,8 @@ public class SemanticAnalyzer {
     }
 
     // What if the type of the thing to be assigned doesn't match
-    if (!varType.getType().equals("string") && !types.get(0)
-        .equals(varType.getType().toUpperCase())) {
+    if (!varType.getType().equals("string")
+        && !matches(types.get(0), varType.getType())) {
       return assignOpError(id);
     }
 
@@ -368,13 +369,27 @@ public class SemanticAnalyzer {
       }
 
       // . . . ngl I forgot what this one breaks
-      if (types == null && leaves.size() > 1) {
-        return assignOpError(id);
-      }
+//      if (types == null && leaves.size() > 1) {
+//        return assignOpError(id);
+//      }
 
     }
 
     return true;
+  }
+
+  private boolean matches(String type, String varType) {
+    boolean toReturn = false;
+
+    if (varType.matches("int|string|boolean")) {
+      if (type.matches(".*BOOL") && varType.equals("boolean")) {
+        toReturn = true;
+      } else if (varType.toUpperCase().equals(type)) {
+        toReturn = true;
+      }
+    }
+
+    return toReturn;
   }
 
   /**
@@ -436,6 +451,16 @@ public class SemanticAnalyzer {
    * assigned. (end of scope/block trigger)
    */
   public boolean bestPractices() {
+    List<SymbolItem> symbolList = symbols.getList();
+    for (SymbolItem item : symbolList) {
+      if (item.getScope() == scope && item.getVal() == null) {
+        warnCount++;
+        System.out.println(
+            "Warning: The variable " + item.getVar() + " which was declared on line " + item
+                .getPos() + " has not been assigned a value.");
+      }
+    }
+
     //TODO
     return false;
   }
@@ -522,6 +547,20 @@ public class SemanticAnalyzer {
    */
   public SyntaxTree getTree() {
     return ast;
+  }
+
+  /**
+   * Don't judge till you've tried it
+   * @return
+   */
+  private String slapTogether(List<Token> tokenList) {
+    String toReturn = "";
+
+    for(Token t : tokenList) {
+      toReturn += t.getOriginal() + " ";
+    }
+
+    return toReturn;
   }
 
   /**
