@@ -56,6 +56,6 @@ public class SymbolItem {
    * @return The string containing the symbol item
    */
   public String toString() {
-    return String.format("%1$-6s| %2$-6s| %3$-6s| %4$-6d| %5$-6s", var, type, val, scope, pos);
+    return String.format("%1$-6s| %2$-8s| %3$-8s| %4$-6d| %5$-6s", var, type, val, scope, pos);
   }
 }

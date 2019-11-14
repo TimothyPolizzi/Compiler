@@ -37,9 +37,9 @@ public class SymbolTable {
    * @return The String with a good graphical representation of the SymbolTable.
    */
   public String toString() {
-    String bar = "-----------------------------";
+    String bar = "-----------------------------------------";
     String header = String
-        .format("%1$-6s| %2$-6s| %3$-6s| %4$-6s| %5$-6s", "Name", "Type", "Value", "Scope", "Line");
+        .format("%1$-6s| %2$-8s| %3$-8s| %4$-6s| %5$-6s", "Name", "Type", "Value", "Scope", "Line");
     String toReturn = bar + "\n" + header + "\n" + bar;
 
     for (SymbolItem item : staticTable) {
