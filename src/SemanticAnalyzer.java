@@ -39,7 +39,7 @@ public class SemanticAnalyzer {
 
     System.out.println("\nINFO Semantic Analysis - Analyzing program " + programNo + "...");
 
-    generateAST();
+    ast = block();
 
     if (errCount != 0) {
       success = false;
@@ -49,13 +49,6 @@ public class SemanticAnalyzer {
           "INFO Semantic Analysis - Analysis completed successfully with " + warnCount
               + " warning(s)");
     }
-  }
-
-  /**
-   * Generates an AST from the given tokens.
-   */
-  private void generateAST() {
-    ast = block();
   }
 
   /**
@@ -76,7 +69,7 @@ public class SemanticAnalyzer {
 
     scope --;
     match("R_BRACE");
-    
+
     return blockTree;
   }
 
@@ -142,6 +135,7 @@ public class SemanticAnalyzer {
       exprTokens = expr(assignStmtTree); //Value the variable is to be assigned to
     }
     typeCheck(idToken, exprTokens, assignStmtTree.getRoot());
+    symbols.activeSymbol(idToken.getOriginal(), scope).setVal(exprTokens.toString());
 
     return assignStmtTree;
   }
@@ -160,7 +154,7 @@ public class SemanticAnalyzer {
       typeToken = terminal(varDeclTree); //The type of the declared variable
       idToken = terminal(varDeclTree); //Name of the declared variable
       checkScope(idToken, typeToken);
-      symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), scope, idToken.getLine());
+      symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), null, scope, idToken.getLine());
     }
 
     return varDeclTree;
@@ -536,6 +530,13 @@ public class SemanticAnalyzer {
   public void printTree() {
     System.out.println("\nINFO Semantic Analysis - Printing AST for program " + programNo + "...");
     System.out.println(ast.depthFirstTraversal());
+  }
+
+  /**
+   * Prints the symbol table
+   */
+  public void printTable() {
+    System.out.println(symbols.toString());
   }
 
 }
