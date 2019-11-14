@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -11,11 +12,14 @@ public class SemanticAnalyzer {
   private List<Token> tokenList;
   private SyntaxTree ast;
   private SymbolTable symbols;
+
   private boolean success;
   private boolean verbose;
+
   private int errCount;
   private int warnCount;
   private int programNo;
+  private int scope;
 
   /**
    * Taking a list of tokens, create a AST and then analyze it for scope and type errors.
@@ -31,6 +35,7 @@ public class SemanticAnalyzer {
     success = true;
     errCount = 0;
     warnCount = 0;
+    scope = -1; // Sure this is a bad idea, however it should allow scope to be 0 at start and go up
 
     System.out.println("\nINFO Semantic Analysis - Analyzing program " + programNo + "...");
 
@@ -48,13 +53,9 @@ public class SemanticAnalyzer {
 
   /**
    * Generates an AST from the given tokens.
-   *
-   * @return A SyntaxTree containing the AST generated from the given tokens.
    */
-  public SyntaxTree generateAST() {
+  private void generateAST() {
     ast = block();
-
-    return ast;
   }
 
   /**
@@ -65,6 +66,7 @@ public class SemanticAnalyzer {
     verboseWriter("Block");
 
     if (qol("L_BRACE")) {
+      scope++;
       match("L_BRACE");
       stmt(blockTree);
 
@@ -78,6 +80,7 @@ public class SemanticAnalyzer {
    * Stmt -> PrintStmt | AssignStmt | VarDecl | WhileStmt | IfStmt | Block
    */
   private void stmt(SyntaxTree parent) {
+    //noinspection DuplicatedCode
     if (qol("PRINT_STMT")) {
       parent.add(printStmt());
 
@@ -126,11 +129,15 @@ public class SemanticAnalyzer {
     SyntaxTree assignStmtTree = new SyntaxTree("<Assignment Statement>");
     verboseWriter("assignmentStatement");
 
+    Token idToken = null;
+    List<Token> exprTokens = null;
+
     if (qol("[a-z]|CHAR")) {
-      terminal(assignStmtTree);
+      idToken = terminal(assignStmtTree); //Name of the variable to be assigned
       match("ASSIGN_OP");
-      expr(assignStmtTree);
+      exprTokens = expr(assignStmtTree); //Value the variable is to be assigned to
     }
+    typeCheck(idToken, exprTokens, assignStmtTree.getRoot());
 
     return assignStmtTree;
   }
@@ -143,8 +150,9 @@ public class SemanticAnalyzer {
     verboseWriter("varDecl");
 
     if (qol("[ISB]_TYPE")) {
-      terminal(varDeclTree);
-      terminal(varDeclTree);
+      Token typeToken = terminal(varDeclTree); //The type of the declared variable
+      Token idToken = terminal(varDeclTree); //Name of the declared variable
+      symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), scope, idToken.getLine());
     }
 
     return varDeclTree;
@@ -185,83 +193,115 @@ public class SemanticAnalyzer {
   /**
    * Expr -> IntExpr | StrExpr | BoolExpr | ID
    */
-  private void expr(SyntaxTree parent) {
+  private List<Token> expr(SyntaxTree parent) {
+    List<Token> toReturn = new ArrayList<>();
+
     if (qol("INT|[0-9]")) {
-      intExpr(parent);
+      toReturn = intExpr(parent);
     } else if (qol("STRING")) {
       strExpr(parent);
     } else if (qol("L_PAREN|[TF]_BOOL")) {
-      boolExpr(parent);
+      toReturn = boolExpr(parent);
     } else if (qol("[a-z]|CHAR")) {
-      terminal(parent);
+      toReturn.add(terminal(parent));
     }
+
+    return toReturn;
   }
 
   /**
    * IntExpr -> digit intOp Expr | digit
    */
-  private void intExpr(SyntaxTree parent) {
+  private List<Token> intExpr(SyntaxTree parent) {
+    List<Token> toReturn = new ArrayList<>();
+
     if (qol("[0-9]|INT") && Pattern
         .matches("\\+|INT_OP", tokenList.get(1).getFlavor())) {
-      terminal(parent);
-      terminal(parent);
-      expr(parent);
+      toReturn.add(terminal(parent)); // val
+      toReturn.add(terminal(parent)); // intOp (+)
+      toReturn.addAll(expr(parent));
     } else if (qol("[0-9]|INT")) {
-      terminal(parent);
+      toReturn.add(terminal(parent));
     }
+
+    return toReturn;
   }
 
   /**
    * StrExpr -> " CharList "
    */
-  private void strExpr(SyntaxTree parent) {
+  private String strExpr(SyntaxTree parent) {
+    String toReturn = "";
+
     if (qol("STRING")) {
-      match("STRING");
-      charList(parent);
+      match("STRING"); // add a string
+      toReturn = charList(parent);
       match("STRING");
     }
+
+    return toReturn;
   }
 
   /**
    * BoolExpr -> ( Expr BoolOp Expr ) | BoolVal
    */
-  private void boolExpr(SyntaxTree parent) {
+  private List<Token> boolExpr(SyntaxTree parent) {
+    List<Token> toReturn = new ArrayList<>();
+
     if (qol("L_PAREN")) {
       match("L_PAREN");
-      expr(parent);
-      terminal(parent);
-      expr(parent);
+      toReturn.addAll(expr(parent));
+      toReturn.add(terminal(parent)); // add a boolean operator (!= or ==)
+      toReturn.addAll(expr(parent));
       match("R_PAREN");
 
     } else if (qol("[TF]_BOOL")) {
-      terminal(parent);
+      toReturn.add(terminal(parent)); // add a boolean
     }
+
+    return toReturn;
+  }
+
+  private String charList(SyntaxTree parent) {
+    String toReturn = charList("");
+    parent.add(toReturn);
+    return toReturn;
   }
 
   /**
-   * CharList -> CharVal CharList | space CharList | lambda
+   * Because the CharList was previously treated as a list of CHAR tokens, it is now being changed
+   * to function as a single string. This is heck.
    */
-  private void charList(SyntaxTree parent) {
+  private String charList(String str) {
+    SyntaxTree falseParent = new SyntaxTree(""); // To not add the Chars to the main tree
+    Token charToken = null;
 
     if (qol("[a-z]|CHAR")) {
-      terminal(parent);
-      charList(parent);
+      charToken = terminal(falseParent);
+      str += charToken.getOriginal(); // add a character
+      return charList(str);
 
     } else if (qol(" ")) {
-      terminal(parent);
-      charList(parent);
+      charToken = terminal(falseParent);
+      str += charToken.getOriginal(); // add a space
+      return charList(str);
 
     } else if (qol("STRING")) {
       //intentionally left blank for lambda set
     }
+
+    return str;
   }
 
   /**
    * pops the terminal
    */
-  private void terminal(SyntaxTree parent) {
+  private Token terminal(SyntaxTree parent) {
+    Token termVal = pop();
 
-    parent.add("[" + pop().getOriginal() + "]");
+    parent.add("[" + termVal.getOriginal() + "]");
+
+    return termVal;
   }
 
   /**
@@ -270,8 +310,81 @@ public class SemanticAnalyzer {
    *
    * @return True if it is correct, false otherwise.
    */
-  public boolean typeCheck() {
-    return false;
+  public boolean typeCheck(Token id, List<Token> childrenTokens, Node root) {
+    List<String> types = sameTypes(childrenTokens);
+    SymbolItem varType = symbols.activeSymbol(id.getOriginal(), scope);
+
+    // What if the variable is not declared
+    if (varType == null) {
+      errCount++;
+      System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
+          + id.getLine() + " was used before being declared.");
+      return false;
+    }
+
+    // What if the multiple types in an expression don't match
+    if (!varType.getType().equals("string") && types == null) {
+      errCount++;
+      System.out.println("Error: The AssignOp expression " + id.getOriginal() + " on line "
+          + id.getLine() + " does not match the type of the declared variable " + varType
+          .getType() + " " + id.getOriginal());
+      return false;
+    }
+
+    // What if the type of the thing to be assigned doesn't match
+    if (!varType.getType().equals("string") && !types.get(0).equals(varType.getType().toUpperCase())) {
+      errCount++;
+      System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
+          + id.getLine() + " does not match the type of the declared variable " + symbols
+          .activeSymbol(id.getOriginal(), scope).getType() + " " + id.getOriginal());
+      return false;
+    }
+
+    // Weird case
+    if (varType.getType().equals("string")) {
+      Node currentNode = root;
+      List<String> leaves = new ArrayList<>();
+
+      for(Node n : currentNode.getChildren()) {
+        if(n.getChildren().size() > 0) {
+          typeCheck(id, childrenTokens, n);
+        } else {
+          leaves.add(n.getVal());
+        }
+      }
+
+      if(types == null && leaves.size() > 1) {
+        errCount++;
+        System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
+            + id.getLine() + " does not match the type of the declared variable " + symbols
+            .activeSymbol(id.getOriginal(), scope).getType() + " " + id.getOriginal());
+        return false;
+      }
+
+    }
+
+    return true;
+  }
+
+  /**
+   * @return the string type of the tokens, or null if they are not the same types.
+   */
+  private List<String> sameTypes(List<Token> tokenList) {
+    List<String> returnList = new ArrayList<>();
+    String type = null;
+
+    for (Token t : tokenList) {
+      if (!Pattern.matches(".*OP", t.getFlavor())) {
+        if (type == null) {
+          type = t.getFlavor();
+        } else if (!t.getFlavor().equals(type)) {
+          return null;
+        }
+        returnList.add(t.getFlavor());
+      }
+    }
+
+    return returnList;
   }
 
   /**
@@ -280,7 +393,21 @@ public class SemanticAnalyzer {
    *
    * @return True if it is legal, false otherwise.
    */
-  public boolean checkScope() {
+  public boolean checkScope(Token type) {
+    List<SymbolItem> foundList = symbols.checkForSymbol(type.getOriginal());
+
+    if (foundList.size() > 0) {
+      for (SymbolItem found : foundList) {
+        if (found.getScope() == scope) {
+          errCount++;
+          System.out.println(
+              "Error: The " + type.getFlavor() + " " + type.getOriginal() + " on line "
+                  + type.getLine() + " was used before being declared.");
+        }
+      }
+    }
+
+    //TODO
     return false;
   }
 
@@ -289,6 +416,7 @@ public class SemanticAnalyzer {
    * assigned. (end of scope/block trigger)
    */
   public boolean bestPractices() {
+    //TODO
     return false;
   }
 
@@ -311,7 +439,7 @@ public class SemanticAnalyzer {
   /**
    * Look to match a terminal and kill everything if it doesn't.
    */
-  private List<Token> match(String toMatch) {
+  private void match(String toMatch) {
     Token currentToken = peek(tokenList);
     if (Pattern.matches(toMatch, currentToken.getFlavor())) {
       //pop topmost token off of stack
@@ -320,7 +448,6 @@ public class SemanticAnalyzer {
       error(toMatch);
       //clears the stack
     }
-    return null;
   }
 
   /**
