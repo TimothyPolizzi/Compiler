@@ -453,6 +453,12 @@ public class Parser {
    * Look to match a terminal and kill everything if it doesn't.
    */
   private List<Token> match(String toMatch) {
+    if (tokenList.size() < 1) {
+      System.out.println("ERROR Parser - Expected [" + toMatch + "] got end of stream.");
+      fail = true;
+      errCount++;
+      return null;
+    }
     Token currentToken = peek(tokenList);
     if (Pattern.matches(toMatch, currentToken.getFlavor())) {
       //pop topmost token off of stack
