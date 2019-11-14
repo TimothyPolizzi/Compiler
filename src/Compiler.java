@@ -16,15 +16,17 @@ public class Compiler {
 
     for (String program : programs) {
       Lexer lex = new Lexer(program, iter, verbose);
+      ArrayList<Token> tokenList = lex.getTokenList();
       if(lex.success()) {
-        ArrayList<Token> parseTokens = new ArrayList<>();
-        Collections.copy(lex.getTokenList(), parseTokens);
+        ArrayList<Token> parseTokens = (ArrayList<Token>) tokenList.clone();
         Parser parse = new Parser(iter, parseTokens, verbose);
         if (parse.success()) {
-          parse.printTree();
-          ArrayList<Token> analysisTokens = new ArrayList<>();
-          SemanticAnalyzer analyzer = new SemanticAnalyzer(analysisTokens);
+          ArrayList<Token> analysisTokens = (ArrayList<Token>) tokenList.clone();
+          SemanticAnalyzer analyzer = new SemanticAnalyzer(iter, analysisTokens, verbose);
 //          if(analyzer.success()) {
+          parse.printTree();
+          analyzer.printTree();
+//          analyzer.printTable();
             // TODO: Code Gen
 //          }
         }
