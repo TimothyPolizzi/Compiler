@@ -94,9 +94,23 @@ public class CompilerTester {
 
     String scoping = "{int i int i i = 1}$";
     String noScope = "{int i {int i { int x int y } int i } print(x)}$";
+    String alanScopeTest =
+        "{\n"
+            + "int a\n"
+            + "boolean b \n"
+            + "{\n"
+            + "string c\n"
+            + "a = 5\n"
+            + "b = true /* no comment */\n"
+            + "c = \"inta\"\n"
+            + "print(c)\n"
+            + "}\n"
+            + "print(b)\n"
+            + "print(a)\n"
+            + "}$";
 
     // Test Here
-    Compiler comp = new Compiler(noScope, false);
+    Compiler comp = new Compiler(alanScopeTest, false);
 //    System.out.println(s.toString());
   }
 
