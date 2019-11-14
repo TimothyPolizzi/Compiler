@@ -73,6 +73,10 @@ public class SemanticAnalyzer {
     } else {
       match("L_BRACE");
     }
+
+    scope --;
+    match("R_BRACE");
+    
     return blockTree;
   }
 
@@ -149,9 +153,13 @@ public class SemanticAnalyzer {
     SyntaxTree varDeclTree = new SyntaxTree("<Variable Declaration>");
     verboseWriter("varDecl");
 
+    Token typeToken = null;
+    Token idToken = null;
+
     if (qol("[ISB]_TYPE")) {
-      Token typeToken = terminal(varDeclTree); //The type of the declared variable
-      Token idToken = terminal(varDeclTree); //Name of the declared variable
+      typeToken = terminal(varDeclTree); //The type of the declared variable
+      idToken = terminal(varDeclTree); //Name of the declared variable
+      checkScope(idToken, typeToken);
       symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), scope, idToken.getLine());
     }
 
@@ -415,22 +423,18 @@ public class SemanticAnalyzer {
    *
    * @return True if it is legal, false otherwise.
    */
-  public boolean checkScope(Token type) {
-    List<SymbolItem> foundList = symbols.checkForSymbol(type.getOriginal());
+  public boolean checkScope(Token id, Token type) {
+    SymbolItem activeSymbol = symbols.activeSymbol(id.getOriginal(), scope);
 
-    if (foundList.size() > 0) {
-      for (SymbolItem found : foundList) {
-        if (found.getScope() == scope) {
-          errCount++;
-          System.out.println(
-              "Error: The " + type.getFlavor() + " " + type.getOriginal() + " on line "
-                  + type.getLine() + " was used before being declared.");
-        }
-      }
+    if (activeSymbol != null && activeSymbol.getScope() == scope) {
+      errCount++;
+      System.out.println(
+          "Error: The " + type.getFlavor() + " " + id.getOriginal() + " on line "
+              + id.getLine() + " is already declared in the scope.");
+      return false;
     }
 
-    //TODO
-    return false;
+    return true;
   }
 
   /**

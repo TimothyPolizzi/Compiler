@@ -92,8 +92,11 @@ public class CompilerTester {
     String stringAnaly4 = "{string i\nx=1}$";
     String pleaseDont = "{int i i = \"abc\"}$";
 
+    String scoping = "{int i int i i = 1}$";
+    String noScope = "{int i {int i { int x int y } int i } print(x)}$";
+
     // Test Here
-    Compiler comp = new Compiler(pleaseDont, false);
+    Compiler comp = new Compiler(noScope, false);
 //    System.out.println(s.toString());
   }
 
