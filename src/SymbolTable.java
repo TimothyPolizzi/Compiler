@@ -22,12 +22,13 @@ public class SymbolTable {
    *
    * @param var The String name of the variable to be added as a Symbol.
    * @param type The String name of the type of variable to be added as a Symbol.
+   * @param val The String representation of the value of the Symbol.
    * @param scope The integer scope of the variable to be added as a Symbol.
    * @param pos The integer line number of the initialization of the variable to be added as a
    * Symbol.
    */
-  public void newSymbol(String var, String type, int scope, int pos) {
-    staticTable.add(new SymbolItem(var, type, scope, pos));
+  public void newSymbol(String var, String type, String val, int scope, int pos) {
+    staticTable.add(new SymbolItem(var, type, val, scope, pos));
   }
 
   /**
@@ -38,7 +39,7 @@ public class SymbolTable {
   public String toString() {
     String bar = "-----------------------------";
     String header = String
-        .format("%1$-6s| %2$-6s| %3$-6s| %4$-6s", "Name", "Type", "Scope", "Line");
+        .format("%1$-6s| %2$-6s| %3$-6s| %4$-6s| %5$-6s", "Name", "Type", "Value", "Scope", "Line");
     String toReturn = bar + "\n" + header + "\n" + bar;
 
     for (SymbolItem item : staticTable) {
