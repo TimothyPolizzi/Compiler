@@ -8,7 +8,7 @@ public class Compiler {
     int iter = 1;
 
     System.out.print("DEBUG Verbose mode is ");
-    if(verbose){
+    if (verbose) {
       System.out.println("on");
     } else {
       System.out.println("off");
@@ -17,18 +17,18 @@ public class Compiler {
     for (String program : programs) {
       Lexer lex = new Lexer(program, iter, verbose);
       ArrayList<Token> tokenList = lex.getTokenList();
-      if(lex.success()) {
+      if (lex.success()) {
         ArrayList<Token> parseTokens = (ArrayList<Token>) tokenList.clone();
         Parser parse = new Parser(iter, parseTokens, verbose);
         if (parse.success()) {
           ArrayList<Token> analysisTokens = (ArrayList<Token>) tokenList.clone();
           SemanticAnalyzer analyzer = new SemanticAnalyzer(iter, analysisTokens, verbose);
-//          if(analyzer.success()) {
           parse.printTree();
           analyzer.printTree();
-//          analyzer.printTable();
+          if (analyzer.success()) {
+            analyzer.printTable();
             // TODO: Code Gen
-//          }
+          }
         }
       }
 
