@@ -263,7 +263,9 @@ public class SemanticAnalyzer {
   }
 
   private String charList(SyntaxTree parent) {
-    String toReturn = charList("");
+    String toReturn = charList("[");
+    toReturn += "]";
+
     parent.add(toReturn);
     return toReturn;
   }
@@ -332,12 +334,9 @@ public class SemanticAnalyzer {
     }
 
     // What if the type of the thing to be assigned doesn't match
-    if (!varType.getType().equals("string") && !types.get(0).equals(varType.getType().toUpperCase())) {
-      errCount++;
-      System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
-          + id.getLine() + " does not match the type of the declared variable " + symbols
-          .activeSymbol(id.getOriginal(), scope).getType() + " " + id.getOriginal());
-      return false;
+    if (!varType.getType().equals("string") && !types.get(0)
+        .equals(varType.getType().toUpperCase())) {
+      return assignOpError(id);
     }
 
     // Weird case
@@ -345,25 +344,46 @@ public class SemanticAnalyzer {
       Node currentNode = root;
       List<String> leaves = new ArrayList<>();
 
-      for(Node n : currentNode.getChildren()) {
-        if(n.getChildren().size() > 0) {
+      // Goal here is to grab all the possible terminals
+      for (Node n : currentNode.getChildren()) {
+        if (n.getChildren().size() > 0) {
           typeCheck(id, childrenTokens, n);
         } else {
-          leaves.add(n.getVal());
+          leaves.add(n.getVal().substring(1, n.getVal().length()-1));
         }
       }
 
-      if(types == null && leaves.size() > 1) {
-        errCount++;
-        System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
-            + id.getLine() + " does not match the type of the declared variable " + symbols
-            .activeSymbol(id.getOriginal(), scope).getType() + " " + id.getOriginal());
-        return false;
+      //remember those terminals? I'm gonna see if any of them AREN'T full of characters, AKA not strings
+      for(String item : leaves) {
+        if(item.matches("[\\W]")) {
+          return assignOpError(id);
+        }
+      }
+
+      if(types != null && types.get(0) != null ) {
+        return assignOpError(id);
+      }
+
+      if (types == null && leaves.size() > 1) {
+        return assignOpError(id);
       }
 
     }
 
     return true;
+  }
+
+  /**
+   * Hair-loss reduction method
+   * @param id
+   * @return
+   */
+  private boolean assignOpError(Token id) {
+    errCount++;
+    System.out.println("Error: The AssignOp " + id.getOriginal() + " on line "
+        + id.getLine() + " does not match the type of the declared variable " + symbols
+        .activeSymbol(id.getOriginal(), scope).getType() + " " + id.getOriginal());
+    return false;
   }
 
   /**

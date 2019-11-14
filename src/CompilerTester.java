@@ -86,10 +86,13 @@ public class CompilerTester {
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
-    String alanParseIssue1 = "{string x\nx=1+\"abc\"}$";
+    String stringAnaly1 = "{string x\nx=\"abc\"}$";
+    String stringAnaly2 = "{string x\nx=1}$";
+    String stringAnaly3 = "{string x\nx=1+\"abc\"}$";
+    String stringAnaly4 = "{string i\nx=1}$";
 
     // Test Here
-    Compiler comp = new Compiler(alanParseIssue1, false);
+    Compiler comp = new Compiler(stringAnaly2 +stringAnaly3, false);
 //    System.out.println(s.toString());
   }
 
