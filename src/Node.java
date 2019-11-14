@@ -69,7 +69,7 @@ public class Node {
    *
    * @return the List of children.
    */
-  public List getChildren() {
+  public List<Node> getChildren() {
     return children;
   }
 }

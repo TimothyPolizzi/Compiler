@@ -27,6 +27,10 @@ public class SymbolItem {
     return var;
   }
 
+  public String getType() {
+    return type;
+  }
+
   public int getPos() {
     return pos;
   }

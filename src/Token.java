@@ -111,4 +111,8 @@ public class Token {
   public int getLine() {
     return line;
   }
+
+  public int getPos() {
+    return pos;
+  }
 }

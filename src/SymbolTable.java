@@ -66,6 +66,32 @@ public class SymbolTable {
     return foundList;
   }
 
+  /**
+   * @return The current "this" symbol, or null if the symbol does not exist.
+   */
+  public SymbolItem activeSymbol(String toFind, int currentScope) {
+    List<SymbolItem> symbols = checkForSymbol(toFind);
+    SymbolItem toReturn = null;
+
+    if (symbols.size() < 1) {
+      return null;
+    }
+
+    for (SymbolItem item : symbols) {
+      if (item.getScope() <= currentScope) {
+        if (item.getScope() == currentScope) {
+          return item;
+        } else if (toReturn == null) {
+          toReturn = item;
+        }else if (toReturn.getScope() > item.getScope()) {
+          toReturn = item;
+        }
+      }
+    }
+
+    return toReturn;
+  }
+
   public ArrayList<SymbolItem> getList() {
     return staticTable;
   }
