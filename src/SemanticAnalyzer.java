@@ -349,19 +349,19 @@ public class SemanticAnalyzer {
         if (n.getChildren().size() > 0) {
           typeCheck(id, childrenTokens, n);
         } else {
-          leaves.add(n.getVal().substring(1, n.getVal().length()-1));
+          leaves.add(n.getVal().substring(1, n.getVal().length() - 1));
         }
       }
 
       //remember those terminals? I'm gonna see if any of them AREN'T full of characters, AKA not strings
-      for(String item : leaves) {
-        if(item.matches("[\\W]")) {
+      for (String item : leaves) {
+        if (item.matches("[\\W]")) {
           return assignOpError(id);
         }
       }
 
       //case where there is a declared string being initialized to not a string
-      if(types != null && types.get(0) != null ) {
+      if (types != null && types.get(0) != null) {
         return assignOpError(id);
       }
 
@@ -377,8 +377,6 @@ public class SemanticAnalyzer {
 
   /**
    * Hair-loss reduction method
-   * @param id
-   * @return
    */
   private boolean assignOpError(Token id) {
     errCount++;
@@ -389,16 +387,18 @@ public class SemanticAnalyzer {
   }
 
   /**
-   * @return the string type of the tokens, or null if they are not the same types.
+   * @return the string type of the tokens, or null if they are not the same types OR if there are
+   * no tokens.
    */
   private List<String> sameTypes(List<Token> tokenList) {
-    List<String> returnList = new ArrayList<>();
+    List<String> returnList = null;
     String type = null;
 
     for (Token t : tokenList) {
       if (!Pattern.matches(".*OP", t.getFlavor())) {
         if (type == null) {
           type = t.getFlavor();
+          returnList = new ArrayList<>();
         } else if (!t.getFlavor().equals(type)) {
           return null;
         }
