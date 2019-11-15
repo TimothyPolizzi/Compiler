@@ -39,7 +39,7 @@ public class SymbolTable {
   public String toString() {
     String bar = "-----------------------------------------";
     String header = String
-        .format("%1$-6s| %2$-8s| %3$-8s| %4$-6s| %5$-6s", "Name", "Type", "Value", "Scope", "Line");
+        .format("%1$-6s| %2$-8s| %3$-8s| %4$-6s| %5$-6s", "Name", "Type", "Scope", "Line", "Value");
     String toReturn = bar + "\n" + header + "\n" + bar;
 
     for (SymbolItem item : staticTable) {
