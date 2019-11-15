@@ -1,4 +1,4 @@
-Testing used the Following cases:
+Testing used the Following cases (updated):
 
 {
 int i
@@ -25,13 +25,52 @@ int i$
 string b
 }$
 
+{
+  int a
+  boolean b
+  {
+    string c
+    a = 5
+    b = true /* No comment */
+    c = "inta"
+    print(c)
+  }
+  print(b)
+  print(a)
+}$
+
+{
+  int i
+  i = 0
+
+  string s 
+  s = "hello"
+
+  boolean b
+  b = ( true == ( 1 != 2 ) )
+
+  if ( b == true ) {
+    while( true != ( b != ( false == ( 2 != 3 )))) {
+      i = 1 + i 
+      print( s )
+    }
+  }
+
+  print("ugly code")
+
+}$
+
+{int i i = 10 { int i i = 2} i = 9}$
+
 Results:
-test1 - Worked as expected, no difficulties
-test2 - Worked, this one pointed out a bug I had in the IntExpr
-test3 - Worked
-test4 - Fails as expected
-test5 - Worked
-test6 - Fails, failed surprisingly well
-test7 - Fails, Pointed out a error catching bug where I didn't catch errors that happened before things began decending the trees
-test8 - Worked
-test9 - Worked
+test1   - Working as intended
+test2   - Working as intended
+test3   - Failed in Parser (intentional)
+test4   - Working as intended
+test5   - Failed in Parser (intentional)
+test6   - Failed in Parser (intentional)
+test7   - Working as intended
+test8   - Working as intended
+test9   - Working as intended
+test10  - Working as best it can
+test11  - Working it's hardest
