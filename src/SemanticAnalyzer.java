@@ -67,6 +67,8 @@ public class SemanticAnalyzer {
       match("L_BRACE");
     }
 
+    bestPractices();
+
     scope--;
     match("R_BRACE");
 
@@ -134,7 +136,10 @@ public class SemanticAnalyzer {
       match("ASSIGN_OP");
       exprTokens = expr(assignStmtTree); //Value the variable is to be assigned to
     }
-    typeCheck(idToken, exprTokens, assignStmtTree.getRoot());
+
+    if (!typeCheck(idToken, exprTokens, assignStmtTree.getRoot())) {
+      return assignStmtTree;
+    }
     symbols.activeSymbol(idToken.getOriginal(), scope).setVal(slapTogether(exprTokens));
 
     return assignStmtTree;
@@ -153,7 +158,9 @@ public class SemanticAnalyzer {
     if (qol("[ISB]_TYPE")) {
       typeToken = terminal(varDeclTree); //The type of the declared variable
       idToken = terminal(varDeclTree); //Name of the declared variable
-      checkScope(idToken, typeToken);
+      if (!checkScope(idToken, typeToken)) {
+        return varDeclTree;
+      }
       symbols.newSymbol(idToken.getOriginal(), typeToken.getOriginal(), null, scope,
           idToken.getLine());
     }
@@ -404,26 +411,61 @@ public class SemanticAnalyzer {
   }
 
   /**
-   * @return the string type of the tokens, or null if they are not the same types OR if there are
-   * no tokens.
+   * List of string types of the tokens, or null if they are not the same types OR if there are no
+   * tokens.
    */
   private List<String> sameTypes(List<Token> tokenList) {
     List<String> returnList = null;
     String type = null;
 
-    for (Token t : tokenList) {
-      if (!Pattern.matches(".*OP", t.getFlavor())) {
+    for (int i = 0; i < tokenList.size(); i++) {
+      Token t = tokenList.get(i);
+
+      if (!Pattern.matches(".*OP|.*EQUAL", t.getFlavor())) {
         if (type == null) {
           type = t.getFlavor();
           returnList = new ArrayList<>();
-        } else if (!t.getFlavor().equals(type)) {
+          /* So if t is not the same type as another item break, unless t is a bool in which case
+           check if that item is too, or if there is a CHAR, which is actually a variable*/
+        } else if (!t.getFlavor().equals(type) && !t.getFlavor().equals("CHAR") &&
+            !(Pattern.matches(".*BOOL", t.getFlavor()) || Pattern.matches(".*BOOL", type))) {
           return null;
         }
         returnList.add(t.getFlavor());
+      } else if (Pattern.matches(".*EQUAL", t.getFlavor())) {
+        type = boolRec(tokenList);
       }
     }
 
     return returnList;
+  }
+
+  /**
+   * Goal is to find out if a boolean expression is legal
+   */
+  private String boolRec(List<Token> tokenList) {
+    String left = null;
+    String right = null;
+
+    for (int i = 0; i < tokenList.size(); i++) {
+      Token t = tokenList.get(i);
+
+      if (Pattern.matches(".*EQUAL", t.getFlavor())) {
+        left = tokenList.get(i - 1).getFlavor();
+        right = boolRec(tokenList.subList(i + 1, tokenList.size()));
+
+        if (left.equals(right) || (Pattern.matches(".*BOOL", left) && Pattern
+            .matches(".*BOOL", right))) {
+          return "BOOL";
+        }
+      }
+    }
+
+    if (tokenList.size() < 2) {
+      return tokenList.get(0).getFlavor();
+    }
+
+    return null;
   }
 
   /**
@@ -450,7 +492,7 @@ public class SemanticAnalyzer {
    * Checks to see if variables have been unused, and if variables have been used without being
    * assigned. (end of scope/block trigger)
    */
-  public boolean bestPractices() {
+  public void bestPractices() {
     List<SymbolItem> symbolList = symbols.getList();
     for (SymbolItem item : symbolList) {
       if (item.getScope() == scope && item.getVal() == null) {
@@ -458,11 +500,9 @@ public class SemanticAnalyzer {
         System.out.println(
             "Warning: The variable " + item.getVar() + " which was declared on line " + item
                 .getPos() + " has not been assigned a value.");
+        return;
       }
     }
-
-    //TODO
-    return false;
   }
 
   /**
@@ -551,12 +591,11 @@ public class SemanticAnalyzer {
 
   /**
    * Don't judge till you've tried it
-   * @return
    */
   private String slapTogether(List<Token> tokenList) {
     String toReturn = "";
 
-    for(Token t : tokenList) {
+    for (Token t : tokenList) {
       toReturn += t.getOriginal() + " ";
     }
 
