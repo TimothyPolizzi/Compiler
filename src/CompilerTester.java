@@ -5,9 +5,9 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-    individualTests();
+//    individualTests();
 //    readFromFileTest();
-//    stdInRead(true);
+    stdInRead(true);
   }
 
   /**
@@ -74,9 +74,9 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
-//    SymbolTable s = new SymbolTable();
-//    s.newSymbol("a", "int", 0, 2);
-//    s.newSymbol("b", "char", 1, 4);
+    SymbolTable s = new SymbolTable();
+    s.newSymbol("a", "boolean","false", 0, 2);
+    s.newSymbol("b", "int","100", 1, 4);
 
     String twoLines = "{s=\"two\nlines\"}$";
     String noEnd = "{a = \"unterminated string }$"; // Lexer Breaks
@@ -93,7 +93,7 @@ public class CompilerTester {
     String pleaseDont = "{int i i = \"abc\"}$";
 
     String scoping = "{int i int i i = 1}$";
-    String noScope = "{int i {int i { int x int y } int i } print(x)}$";
+    String noScope = "{int i i = 10 { int i i = 2} i = 9}$";
     String alanScopeTest =
         "{\n"
             + "int a\n"
@@ -110,7 +110,7 @@ public class CompilerTester {
             + "}$";
 
     // Test Here
-    Compiler comp = new Compiler(alanScopeTest, false);
+    Compiler comp = new Compiler(scoping, false);
 //    System.out.println(s.toString());
   }
 
