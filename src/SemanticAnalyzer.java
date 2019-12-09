@@ -320,6 +320,8 @@ public class SemanticAnalyzer {
    * Checks a variable that is being assigned to see if it is the correct type to be assigned to the
    * variable, or if the variable has not been declared. (assignment trigger)
    *
+   * TODO: In case of assigning to a variable, grab it's type from the table
+   *
    * @return True if it is correct, false otherwise.
    */
   public boolean typeCheck(Token id, List<Token> childrenTokens, Node root) {

@@ -6,8 +6,8 @@ public class CompilerTester {
 
   public static void main(String[] args) {
 //    individualTests();
-//    readFromFileTest();
-    stdInRead(true);
+    readFromFileTest();
+//    stdInRead(true);
   }
 
   /**
