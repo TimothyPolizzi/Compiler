@@ -5,8 +5,8 @@ import java.util.*;
 public class CompilerTester {
 
   public static void main(String[] args) {
-//    individualTests();
-    readFromFileTest();
+    individualTests();
+//    readFromFileTest();
 //    stdInRead(true);
   }
 
@@ -74,9 +74,7 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
-    SymbolTable s = new SymbolTable();
-    s.newSymbol("a", "boolean","false", 0, 2);
-    s.newSymbol("b", "int","100", 1, 4);
+    CodeGeneration v = new CodeGeneration();
 
     String twoLines = "{s=\"two\nlines\"}$";
     String noEnd = "{a = \"unterminated string }$"; // Lexer Breaks
@@ -110,8 +108,15 @@ public class CompilerTester {
             + "}$";
 
     // Test Here
-    Compiler comp = new Compiler(scoping, false);
-//    System.out.println(s.toString());
+//    Compiler comp = new Compiler(scoping, false);
+    v.initializeInt('a');
+    v.initializeInt('b');
+    v.initializeInt('c');
+    v.assignInt('a', 2);
+    v.assignInt('b', 255);
+    v.assignInt('c', 100);
+    System.out.println(v.variableTable.toString());
+    System.out.println(v.toString());
   }
 
   /**
