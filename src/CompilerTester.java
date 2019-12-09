@@ -74,6 +74,10 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
+    SymbolTable s = new SymbolTable();
+    s.newSymbol("a", "boolean","false", 0, 2);
+    s.newSymbol("b", "int","100", 1, 4);
+
     String twoLines = "{s=\"two\nlines\"}$";
     String noEnd = "{a = \"unterminated string }$"; // Lexer Breaks
 
@@ -82,10 +86,32 @@ public class CompilerTester {
     String alanComments = "{\nstring s\ns = \"this string is /* in */ visible\"\n}$";
     String alanComments2 = "{\n/* what about comments */\nstring b\n}$";
 
-    String alanParseIssue1 = "";
+    String stringAnaly1 = "{string x\nx=\"abc\"}$";
+    String stringAnaly2 = "{string x\nx=1}$";
+    String stringAnaly3 = "{string x\nx=1+\"abc\"}$";
+    String stringAnaly4 = "{string i\nx=1}$";
+    String pleaseDont = "{int i i = \"abc\"}$";
+
+    String scoping = "{int i int i i = 1}$";
+    String noScope = "{int i i = 10 { int i i = 2} i = 9}$";
+    String alanScopeTest =
+        "{\n"
+            + "int a\n"
+            + "boolean b \n"
+            + "{\n"
+            + "string c\n"
+            + "a = 5\n"
+            + "b = true /* no comment */\n"
+            + "c = \"inta\"\n"
+            + "print(c)\n"
+            + "}\n"
+            + "print(b)\n"
+            + "print(a)\n"
+            + "}$";
 
     // Test Here
-    Compiler comp = new Compiler(alanParseIssue1, true);
+    Compiler comp = new Compiler(scoping, false);
+//    System.out.println(s.toString());
   }
 
   /**

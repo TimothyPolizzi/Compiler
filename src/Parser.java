@@ -95,6 +95,7 @@ public class Parser {
     } else if (qol("R_BRACE")) {
       // intentionally left blank for lambda set
     }
+
     return stmtListTree;
   }
 
@@ -289,6 +290,8 @@ public class Parser {
 
     } else if (qol("[TF]_BOOL")) {
       boolExprTree.add(boolVal());
+    } else {
+      error("L_PAREN");
     }
 
     return boolExprTree;
@@ -303,6 +306,8 @@ public class Parser {
 
     if (qol("[a-z]|CHAR")) {
       idTree.add(charVal());
+    } else {
+      error("CHAR");
     }
 
     return idTree;
@@ -377,7 +382,7 @@ public class Parser {
    */
   private SyntaxTree digit() {
     verboseWriter("digit");
-    SyntaxTree digitTree = new SyntaxTree("digit");
+    SyntaxTree digitTree = new SyntaxTree("intVal");
 
     if (qol("[0-9]|INT")) {
       digitTree.add(pop().getOriginal());
@@ -429,20 +434,37 @@ public class Parser {
   }
 
   /**
+   * Error handling.
+   *
+   * @param expected The thing that was expected to be found, and wasn't.
+   */
+  private void error(String expected) {
+    Token currentToken = peek(tokenList);
+    System.out.println(
+        "ERROR Parser - Expected [" + expected + "] got [" + currentToken.getFlavor()
+            + "] with value '" + currentToken.getOriginal() + "' on line " + currentToken
+            .getLine());
+
+    fail = true;
+    errCount++;
+  }
+
+  /**
    * Look to match a terminal and kill everything if it doesn't.
    */
   private List<Token> match(String toMatch) {
+    if (tokenList.size() < 1) {
+      System.out.println("ERROR Parser - Expected [" + toMatch + "] got end of stream.");
+      fail = true;
+      errCount++;
+      return null;
+    }
     Token currentToken = peek(tokenList);
     if (Pattern.matches(toMatch, currentToken.getFlavor())) {
       //pop topmost token off of stack
       pop();
     } else {
-      System.out.println(
-          "ERROR Parser - Expected [" + toMatch + "] got [" + currentToken.getFlavor()
-              + "] with value '" + currentToken.getOriginal() + "' on line " + currentToken
-              .getLine());
-      fail = true;
-      errCount++;
+      error(toMatch);
       //clears the stack
     }
     return null;
@@ -495,6 +517,7 @@ public class Parser {
 
   /**
    * Get the CST.
+   *
    * @return tree, the CST.
    */
   public SyntaxTree getTree() {

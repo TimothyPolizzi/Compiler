@@ -3,7 +3,7 @@ import java.util.List;
 
 public class Node {
 
-  private Object val;
+  private String val;
   private List children;
   private Node parent;
 
@@ -13,7 +13,7 @@ public class Node {
    * @param parent The parent Node of the node.
    * @param val The Token value of the node.
    */
-  public Node(Node parent, Object val) {
+  public Node(Node parent, String val) {
     this(val);
     this.parent = parent;
   }
@@ -23,7 +23,7 @@ public class Node {
    *
    * @param val The value of the node.
    */
-  public Node(Object val) {
+  public Node(String val) {
     children = new ArrayList();
     this.val = val;
   }
@@ -51,7 +51,7 @@ public class Node {
    *
    * @return the value stored in the node.
    */
-  public Object getVal() {
+  public String getVal() {
     return val;
   }
 
@@ -69,7 +69,7 @@ public class Node {
    *
    * @return the List of children.
    */
-  public List getChildren() {
+  public List<Node> getChildren() {
     return children;
   }
 }
