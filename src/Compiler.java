@@ -1,3 +1,4 @@
+import com.sun.tools.javac.jvm.Code;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -27,7 +28,7 @@ public class Compiler {
           analyzer.printTree();
           if (analyzer.success()) {
             analyzer.printTable();
-            // TODO: Code Gen
+//            CodeGeneration codeGen = new CodeGeneration(analyzer.getTree());
           }
         }
       }
