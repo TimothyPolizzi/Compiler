@@ -12,17 +12,21 @@ public class CodeGeneration {
   private JumpTable jumpTable;
   private VariableTable variableTable;
   private int bytesUsed;
+  private SymbolTable table;
+  private int currentEndOfHeap;
 
   /**
    * Create a new CodeGeneration object that generates Machine Code from a given AST
    *
    * @param ast The given AST to be converted into machine code.
    */
-  public CodeGeneration(SyntaxTree ast, int programNo) {
+  public CodeGeneration(SyntaxTree ast, int programNo, SymbolTable table) {
     exeEnv = "";
     bytesUsed = 0;
+    currentEndOfHeap = 95;
     jumpTable = new JumpTable();
     variableTable = new VariableTable();
+    this.table = table;
 
     System.out.println("\nINFO Code Generation - Generating code for program " + programNo + "...");
 
@@ -54,24 +58,39 @@ public class CodeGeneration {
 
       // If a root node
       if (child.getChildren().size() > 0) {
-        if (Pattern.matches("", child.getVal())) {
-
+        if (Pattern.matches("Print.*", child.getVal())) {
+          print(child.getChildren().get(0).getVal().charAt(0));
+          return;
         }
 
         dft(child.getChildren(), depth);
 
         // if a leaf node
       } else {
-        if (Pattern.matches("int", child.getVal())) {
+        if (Pattern.matches("int|string|boolean|[a-z]$", child.getVal())) {
           Node varName = child.getParent().getChildren().get(1);
-          initializeInt(varName.getVal().charAt(0));
-
-        } else if (Pattern.matches("string", child.getVal())) {
-
-        } else if (Pattern.matches("boolean", child.getVal())) {
-
-        } else if (Pattern.matches("char", child.getVal())) {
-
+          // if initializing an integer
+          if (Pattern.matches("int|string|boolean", child.getVal())) {
+            char varChar = varName.getVal().charAt(0);
+            initializeVar(varChar,
+                table.checkForSymbol(Character.toString(varChar)).get(0).getScope());
+            return;
+            // if assigning a variable
+          } else if (Pattern.matches("[a-z]", child.getVal())) {
+            // assigning an integer
+            if (Pattern.matches("\\d+", varName.getVal())) {
+              assignInt(child.getVal().charAt(0), Integer.parseInt(varName.getVal()));
+              // assigning a string
+            } else if (Pattern.matches("\\[[a-z]*]", varName.getVal())) {
+// TODO
+              // assigning a boolean
+            } else if (Pattern.matches("true|false", varName.getVal())) {
+// TODO
+              // assigning a variable to another variable
+            } else if (Pattern.matches("[a-z]", varName.getVal())) {
+              assignVar(child.getVal().charAt(0), varName.getVal().charAt(0));
+            }
+          }
         }
       }
     }
@@ -85,9 +104,9 @@ public class CodeGeneration {
    *
    * @param var The variable in the source code.
    */
-  private void initializeInt(char var) {
+  private void initializeVar(char var, int scope) {
     String initInt = "A9008D";
-    variableTable.addVar(var);
+    variableTable.addVar(var, scope);
     initInt += variableTable.getTemp(var);
     exeEnv += initInt;
     bytesUsed += initInt.length() / 2;
@@ -108,6 +127,21 @@ public class CodeGeneration {
     assignInt += variableTable.getTemp(var);
     exeEnv += assignInt;
     bytesUsed += assignInt.length() / 2;
+  }
+
+  /**
+   * Assigns a string val to the end of the heap space located at the end of the code.
+   *
+   * @param var The name of the variable that is being assigned in the source code.
+   * @param val The value of the string the variable is to be assigned to.
+   */
+  private void assignString(char var, String val) {
+    String assignStr = "A9";
+    storeString();
+  }
+
+  private int storeString(String toBeStored) {
+    
   }
 
   /**
