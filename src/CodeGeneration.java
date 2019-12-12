@@ -26,7 +26,7 @@ public class CodeGeneration {
   public CodeGeneration(SyntaxTree ast, int programNo, SymbolTable table) {
     exeEnv = "";
     bytesUsed = 0;
-    currentEndOfHeap = 95;
+    currentEndOfHeap = 96;
     stringForHeap = "";
     jumpTable = new JumpTable();
     variableTable = new VariableTable();
@@ -53,11 +53,19 @@ public class CodeGeneration {
     dft(childList, depth);
     variableTable.calculateAddresses(bytesUsed);
 
+    // Replaces temporary variables with the locations in memory
     for (VariableItem item : variableTable.getItemList()) {
       exeEnv = exeEnv.replaceAll(item.getTemp(), String.format("%H00",item.getAddress()));
     }
 
-    //TODO: find and replace all temp vars with addresses
+    int diff = currentEndOfHeap - bytesUsed;
+
+    while(diff > 0) {
+      exeEnv += "00";
+      diff--;
+    }
+
+    exeEnv += stringForHeap;
   }
 
   private void dft(List<Node> children, int depth) {
@@ -168,7 +176,7 @@ public class CodeGeneration {
    */
   private void assignString(char var, String val, int scope) {
     String assignStr = "A9";
-    assignStr += String.format("%02x", storeString(val));
+    assignStr += String.format("%02X", storeString(val));
     assignStr += "8D";
     assignStr += variableTable.getTemp(var);
     exeEnv += assignStr;
@@ -181,7 +189,7 @@ public class CodeGeneration {
   private int storeString(String toBeStored) {
     String addToHeap = "";
     for (char c : toBeStored.toCharArray()) {
-      addToHeap += String.format("%02x", (int) c);
+      addToHeap += String.format("%02X", (int) c);
       currentEndOfHeap--;
     }
     addToHeap += "00";
