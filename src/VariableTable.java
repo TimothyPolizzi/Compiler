@@ -1,24 +1,14 @@
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * A Variable Table to be used in the Code Generation for the SAD Compiler for Alan Labouseur's
- * compilers class.
- *
- * @author Tim Polizzi
- */
 public class VariableTable {
 
-  private ArrayList<String> temp;
-  private ArrayList<Character> var;
-  private ArrayList<Integer> address;
+  private List<VariableItem> itemList;
+  private int totalVars;
 
-  /**
-   * Generates a new instance of a VariableTable.
-   */
   public VariableTable() {
-    temp = new ArrayList<>();
-    var = new ArrayList<>();
-    address = new ArrayList<>();
+    itemList = new ArrayList<>();
+    totalVars = 0;
   }
 
   /**
@@ -26,30 +16,41 @@ public class VariableTable {
    *
    * @param var The original name of the variable in the source code.
    */
-  public void addVar(char var) {
-    this.temp.add("T" + storedVars() + "XX");
-    this.var.add(var);
-    address.add(address.size());
+  public void addVar(char var, int scope) {
+    itemList.add(new VariableItem(var, totalVars, scope));
+    totalVars++;
   }
 
   /**
    * Gets the address in memory of a temporary variable.
    *
    * @param temp The temporary variable.
-   * @return The address in memory of the variable.
+   * @return The address in memory of the variable, or -1 if it could not be found.
    */
   public int getAddress(String temp) {
-    return address.get(this.temp.indexOf(temp));
+    for (VariableItem item : itemList) {
+      if (item.getTemp().equals(temp)) {
+        return item.getAddress();
+      }
+    }
+
+    return -1;
   }
 
   /**
    * Gets the temporary variable associated with a given character variable.
    *
    * @param var The variable in the source code.
-   * @return The stored temporary variable.
+   * @return The stored temporary variable, or null if the item could not be found;
    */
   public String getTemp(char var) {
-    return temp.get(this.var.indexOf(var));
+    for (VariableItem item : itemList) {
+      if (item.getVar() == var) {
+        return item.getTemp();
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -59,7 +60,11 @@ public class VariableTable {
    * @param address The address the variable is to be set to.
    */
   public void setAddress(String temp, int address) {
-    this.address.add(this.temp.indexOf(temp), address);
+    for (VariableItem item : itemList) {
+      if (item.getTemp().equals(temp)) {
+        item.setAddress(address);
+      }
+    }
   }
 
   /**
@@ -68,25 +73,13 @@ public class VariableTable {
    * @param bytesUsed The number of bytes used by the code.
    */
   public void calculateAddresses(int bytesUsed) {
-    for (int i = 0; i < address.size(); i++) {
-      address.set(i, bytesUsed + i);
+    for (int i = 0; i < totalVars; i++) {
+      itemList.get(i).setAddress(bytesUsed + i);
     }
   }
 
   private int storedVars() {
-    return var.size();
-  }
-
-  public ArrayList<Character> getVar() {
-    return var;
-  }
-
-  public ArrayList<Integer> getAddress() {
-    return address;
-  }
-
-  public ArrayList<String> getTemp() {
-    return temp;
+    return totalVars;
   }
 
   /**
@@ -101,12 +94,16 @@ public class VariableTable {
 
     toReturn += line;
 
-    for (int i = 0; i < temp.size(); i++) {
+    for (int i = 0; i < totalVars; i++) {
+      VariableItem currentItem = itemList.get(i);
+
       String stringLine = String
-          .format("%-5s | %-5s | %-5X\n", temp.get(i), var.get(i), address.get(i));
+          .format("%-5s | %-5s | %-5X\n", currentItem.getTemp(), currentItem.getVar(),
+              currentItem.getAddress());
       toReturn += stringLine;
     }
 
     return toReturn;
   }
+
 }
