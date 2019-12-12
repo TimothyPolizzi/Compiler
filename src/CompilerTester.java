@@ -74,19 +74,15 @@ public class CompilerTester {
    * The wonderful one-off tests I write. There's a lot. I use a lot.
    */
   private static void individualTests() {
-    CodeGeneration v = new CodeGeneration(new SyntaxTree(""));
+//    CodeGeneration v = new CodeGeneration(new SyntaxTree(""));
     // Test Here
-    
 
-//    Compiler comp = new Compiler(scoping, false);
-    v.initializeInt('a');
-    v.initializeInt('b');
-    v.initializeInt('c');
-    v.assignInt('a', 2);
-    v.assignInt('b', 255);
-    v.assignInt('c', 100);
-    System.out.println(v.variableTable.toString());
-    System.out.println(v.toString());
+    String test = "{int i i = 1 string b b = \"abc\" boolean d d = false print(a)}$";
+
+
+    Compiler comp = new Compiler(test, false);
+
+//    System.out.println(v.toString());
   }
 
   /**

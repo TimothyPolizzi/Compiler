@@ -55,7 +55,7 @@ public class SemanticAnalyzer {
    * Used to add a block, and adds a new scope.
    */
   private SyntaxTree block() {
-    SyntaxTree blockTree = new SyntaxTree("<Block>");
+    SyntaxTree blockTree = new SyntaxTree("Block");
     verboseWriter("Block");
 
     if (qol("L_BRACE")) {
@@ -108,7 +108,7 @@ public class SemanticAnalyzer {
    * PrintStmt -> print ( Expr )
    */
   private SyntaxTree printStmt() {
-    SyntaxTree printStmtTree = new SyntaxTree("<Print Statement>");
+    SyntaxTree printStmtTree = new SyntaxTree("Print Statement");
     verboseWriter("printStatement");
 
     if (qol("PRINT_STMT")) {
@@ -125,7 +125,7 @@ public class SemanticAnalyzer {
    * AssignStmt -> id = Expr
    */
   private SyntaxTree assignStmt() {
-    SyntaxTree assignStmtTree = new SyntaxTree("<Assignment Statement>");
+    SyntaxTree assignStmtTree = new SyntaxTree("Assignment Statement");
     verboseWriter("assignmentStatement");
 
     Token idToken = null;
@@ -140,7 +140,14 @@ public class SemanticAnalyzer {
     if (!typeCheck(idToken, exprTokens, assignStmtTree.getRoot())) {
       return assignStmtTree;
     }
-    symbols.activeSymbol(idToken.getOriginal(), scope).setVal(slapTogether(exprTokens));
+
+    String varValue = assignStmtTree.getRoot().getChildren().get(1).getVal();
+
+    if(!Pattern.matches("^\\[.*", varValue)) {
+      symbols.activeSymbol(idToken.getOriginal(), scope).setVal(slapTogether(exprTokens));
+    } else {
+      symbols.activeSymbol(idToken.getOriginal(), scope).setVal(varValue);
+    }
 
     return assignStmtTree;
   }
@@ -149,7 +156,7 @@ public class SemanticAnalyzer {
    * VarDecl -> type id
    */
   private SyntaxTree varDecl() {
-    SyntaxTree varDeclTree = new SyntaxTree("<Variable Declaration>");
+    SyntaxTree varDeclTree = new SyntaxTree("Variable Declaration");
     verboseWriter("varDecl");
 
     Token typeToken = null;
@@ -172,7 +179,7 @@ public class SemanticAnalyzer {
    * WhileStmt -> while BoolExpr Block
    */
   private SyntaxTree whileStmt() {
-    SyntaxTree whileStmtTree = new SyntaxTree("<While Statement>");
+    SyntaxTree whileStmtTree = new SyntaxTree("While Statement");
     verboseWriter("whileStatement");
 
     if (qol("WHILE_LOOP")) {
@@ -188,7 +195,7 @@ public class SemanticAnalyzer {
    * IfStmt -> if BoolExpr Block
    */
   private SyntaxTree ifStmt() {
-    SyntaxTree ifStmtTree = new SyntaxTree("<If Statement>");
+    SyntaxTree ifStmtTree = new SyntaxTree("If Statement");
     verboseWriter("ifStatement");
 
     if (qol("IF_STMT")) {
@@ -311,7 +318,7 @@ public class SemanticAnalyzer {
   private Token terminal(SyntaxTree parent) {
     Token termVal = pop();
 
-    parent.add("[" + termVal.getOriginal() + "]");
+    parent.add(termVal.getOriginal());
 
     return termVal;
   }
@@ -361,7 +368,7 @@ public class SemanticAnalyzer {
         if (n.getChildren().size() > 0) {
           typeCheck(id, childrenTokens, n);
         } else {
-          leaves.add(n.getVal().substring(1, n.getVal().length() - 1));
+          leaves.add(n.getVal());
         }
       }
 

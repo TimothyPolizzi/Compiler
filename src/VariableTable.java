@@ -29,7 +29,7 @@ public class VariableTable {
   public void addVar(char var) {
     this.temp.add("T" + storedVars() + "XX");
     this.var.add(var);
-    address.add(0x2f + address.size());
+    address.add(address.size());
   }
 
   /**
@@ -60,6 +60,17 @@ public class VariableTable {
    */
   public void setAddress(String temp, int address) {
     this.address.add(this.temp.indexOf(temp), address);
+  }
+
+  /**
+   * Calculates the addresses in memory for the variables.
+   *
+   * @param bytesUsed The number of bytes used by the code.
+   */
+  public void calculateAddresses(int bytesUsed) {
+    for (int i = 0; i < address.size(); i++) {
+      address.set(i, bytesUsed + i);
+    }
   }
 
   private int storedVars() {

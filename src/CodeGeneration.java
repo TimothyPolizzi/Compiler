@@ -1,3 +1,6 @@
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * Code Generation for the SAD Compiler for Alan Labouseur's compilers class.
  *
@@ -7,19 +10,71 @@ public class CodeGeneration {
 
   private String exeEnv;
   private JumpTable jumpTable;
-  public VariableTable variableTable;
-  private SyntaxTree ast;
+  private VariableTable variableTable;
+  private int bytesUsed;
 
   /**
    * Create a new CodeGeneration object that generates Machine Code from a given AST
    *
    * @param ast The given AST to be converted into machine code.
    */
-  public CodeGeneration(SyntaxTree ast) {
+  public CodeGeneration(SyntaxTree ast, int programNo) {
     exeEnv = "";
+    bytesUsed = 0;
     jumpTable = new JumpTable();
     variableTable = new VariableTable();
-    this.ast = ast;
+
+    System.out.println("\nINFO Code Generation - Generating code for program " + programNo + "...");
+
+    generateFromAST(ast);
+
+    System.out.println(toString());
+  }
+
+  /**
+   * Generate code from the AST
+   *
+   * @param ast The AST that code will be generated from
+   */
+  private void generateFromAST(SyntaxTree ast) {
+    Node root = ast.getRoot();
+    List<Node> childList = root.getChildren();
+    int depth = 0;
+
+    dft(childList, depth);
+    variableTable.calculateAddresses(bytesUsed);
+
+    //TODO: find and replace all temp vars with addresses
+  }
+
+  private void dft(List<Node> children, int depth) {
+    depth++;
+
+    for (Node child : children) {
+
+      // If a root node
+      if (child.getChildren().size() > 0) {
+        if (Pattern.matches("", child.getVal())) {
+
+        }
+
+        dft(child.getChildren(), depth);
+
+        // if a leaf node
+      } else {
+        if (Pattern.matches("int", child.getVal())) {
+          Node varName = child.getParent().getChildren().get(1);
+          initializeInt(varName.getVal().charAt(0));
+
+        } else if (Pattern.matches("string", child.getVal())) {
+
+        } else if (Pattern.matches("boolean", child.getVal())) {
+
+        } else if (Pattern.matches("char", child.getVal())) {
+
+        }
+      }
+    }
   }
 
   /**
@@ -30,11 +85,12 @@ public class CodeGeneration {
    *
    * @param var The variable in the source code.
    */
-  public void initializeInt(char var) {
+  private void initializeInt(char var) {
     String initInt = "A9008D";
     variableTable.addVar(var);
-    String tempVar = variableTable.getTemp(var);
-    exeEnv += initInt + tempVar;
+    initInt += variableTable.getTemp(var);
+    exeEnv += initInt;
+    bytesUsed += initInt.length() / 2;
   }
 
   /**
@@ -45,12 +101,13 @@ public class CodeGeneration {
    * @param var The variable from the source code.
    * @param val The value that var is to be assigned to.
    */
-  public void assignInt(char var, int val) {
+  private void assignInt(char var, int val) {
     String assignInt = "A9";
     assignInt += String.format("%02X", val);
     assignInt += "8D";
     assignInt += variableTable.getTemp(var);
     exeEnv += assignInt;
+    bytesUsed += assignInt.length() / 2;
   }
 
   /**
@@ -61,12 +118,13 @@ public class CodeGeneration {
    * @param var1 The variable to have it's value reassigned.
    * @param var2 The variable who's value will be copied.
    */
-  public void assignVar(char var1, char var2) {
+  private void assignVar(char var1, char var2) {
     String assignVar = "AD";
     assignVar += variableTable.getTemp(var2);
     assignVar += "8D";
     assignVar += variableTable.getTemp(var1);
     exeEnv += assignVar;
+    bytesUsed += assignVar.length() / 2;
   }
 
   /**
@@ -76,11 +134,12 @@ public class CodeGeneration {
    *
    * @param var The variable to have it's value printed.
    */
-  public void print(char var) {
+  private void print(char var) {
     String toPrint = "AC";
     toPrint += variableTable.getTemp(var);
     toPrint += "A201FF";
     exeEnv += toPrint;
+    bytesUsed += toPrint.length() / 2;
   }
 
   /**
@@ -104,5 +163,21 @@ public class CodeGeneration {
     }
 
     return toReturn;
+  }
+
+  public JumpTable getJumpTable() {
+    return jumpTable;
+  }
+
+  public VariableTable getVariableTable() {
+    return variableTable;
+  }
+
+  public void printTables() {
+    System.out.println("\nINFO printing Jump and Variable Tables");
+
+    System.out.println("\n" + jumpTable.toString());
+
+    System.out.println("\n" + variableTable.toString());
   }
 }

@@ -22,13 +22,14 @@ public class Compiler {
         ArrayList<Token> parseTokens = (ArrayList<Token>) tokenList.clone();
         Parser parse = new Parser(iter, parseTokens, verbose);
         if (parse.success()) {
+          parse.printTree();
           ArrayList<Token> analysisTokens = (ArrayList<Token>) tokenList.clone();
           SemanticAnalyzer analyzer = new SemanticAnalyzer(iter, analysisTokens, verbose);
-          parse.printTree();
           analyzer.printTree();
           if (analyzer.success()) {
             analyzer.printTable();
-//            CodeGeneration codeGen = new CodeGeneration(analyzer.getTree());
+            CodeGeneration codeGen = new CodeGeneration(analyzer.getTree(), iter);
+            codeGen.printTables();
           }
         }
       }
