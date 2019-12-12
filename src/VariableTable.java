@@ -78,9 +78,11 @@ public class VariableTable {
     }
   }
 
-  private int storedVars() {
+  public int storedVars() {
     return totalVars;
   }
+
+  public List<VariableItem> getItemList() { return itemList;}
 
   /**
    * Returns a nicely formatted table of the variables and their jump distances.
@@ -88,9 +90,10 @@ public class VariableTable {
    * @return A well formatted String of variables and jump distances.
    */
   public String toString() {
-    String toReturn = String.format("%-5s | %-5s | %-5s\n", "Temp", "Var", "Address");
+    String toReturn = String
+        .format("%-5s | %-5s | %-5s | %-5s\n", "Temp", "Var", "Scope", "Address");
 
-    String line = "-------------------------\n";
+    String line = "--------------------------------\n";
 
     toReturn += line;
 
@@ -98,8 +101,8 @@ public class VariableTable {
       VariableItem currentItem = itemList.get(i);
 
       String stringLine = String
-          .format("%-5s | %-5s | %-5X\n", currentItem.getTemp(), currentItem.getVar(),
-              currentItem.getAddress());
+          .format("%-5s | %-5s | %-5d | %X00\n", currentItem.getTemp(), currentItem.getVar(),
+              currentItem.getScope(),currentItem.getAddress());
       toReturn += stringLine;
     }
 

@@ -61,6 +61,22 @@ public class SyntaxTree {
   }
 
   /**
+   * Gets the depth from the root from a given node.
+   * @param n The node to be traversed from.
+   * @return The integer value of the distance between the node and the root.
+   */
+  public int getDepth(Node n) {
+    int count = 0;
+
+    while (n.getParent() != null) {
+      n = n.getParent();
+      count++;
+    }
+
+    return count;
+  }
+
+  /**
    * Gets a string that contains the whole SyntaxTree in a String format.
    *
    * @return a String containing the SyntaxTree.

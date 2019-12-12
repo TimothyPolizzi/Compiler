@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -14,6 +15,8 @@ public class CodeGeneration {
   private int bytesUsed;
   private SymbolTable table;
   private int currentEndOfHeap;
+  private String stringForHeap;
+  private SyntaxTree ast;
 
   /**
    * Create a new CodeGeneration object that generates Machine Code from a given AST
@@ -24,9 +27,11 @@ public class CodeGeneration {
     exeEnv = "";
     bytesUsed = 0;
     currentEndOfHeap = 95;
+    stringForHeap = "";
     jumpTable = new JumpTable();
     variableTable = new VariableTable();
     this.table = table;
+    this.ast = ast;
 
     System.out.println("\nINFO Code Generation - Generating code for program " + programNo + "...");
 
@@ -48,6 +53,10 @@ public class CodeGeneration {
     dft(childList, depth);
     variableTable.calculateAddresses(bytesUsed);
 
+    for (VariableItem item : variableTable.getItemList()) {
+      exeEnv = exeEnv.replaceAll(item.getTemp(), String.format("%H00",item.getAddress()));
+    }
+
     //TODO: find and replace all temp vars with addresses
   }
 
@@ -59,7 +68,7 @@ public class CodeGeneration {
       // If a root node
       if (child.getChildren().size() > 0) {
         if (Pattern.matches("Print.*", child.getVal())) {
-          print(child.getChildren().get(0).getVal().charAt(0));
+          print(child.getChildren().get(0).getVal().charAt(0), ast.getDepth(child));
           return;
         }
 
@@ -72,23 +81,25 @@ public class CodeGeneration {
           // if initializing an integer
           if (Pattern.matches("int|string|boolean", child.getVal())) {
             char varChar = varName.getVal().charAt(0);
-            initializeVar(varChar,
-                table.checkForSymbol(Character.toString(varChar)).get(0).getScope());
+            initializeVar(varChar, ast.getDepth(varName) - 2);
             return;
             // if assigning a variable
           } else if (Pattern.matches("[a-z]", child.getVal())) {
+            char thisVar = child.getVal().charAt(0);
+            int thisDepth = ast.getDepth(child);
+
             // assigning an integer
             if (Pattern.matches("\\d+", varName.getVal())) {
-              assignInt(child.getVal().charAt(0), Integer.parseInt(varName.getVal()));
+              assignInt(thisVar, Integer.parseInt(varName.getVal()), thisDepth);
               // assigning a string
             } else if (Pattern.matches("\\[[a-z]*]", varName.getVal())) {
-// TODO
+              assignString(thisVar, varName.getVal(), thisDepth);
               // assigning a boolean
             } else if (Pattern.matches("true|false", varName.getVal())) {
-// TODO
+              assignBoolean(thisVar, Boolean.parseBoolean(varName.getVal()), thisDepth);
               // assigning a variable to another variable
             } else if (Pattern.matches("[a-z]", varName.getVal())) {
-              assignVar(child.getVal().charAt(0), varName.getVal().charAt(0));
+              assignVar(thisVar, thisDepth, varName.getVal().charAt(0), ast.getDepth(varName));
             }
           }
         }
@@ -120,9 +131,29 @@ public class CodeGeneration {
    * @param var The variable from the source code.
    * @param val The value that var is to be assigned to.
    */
-  private void assignInt(char var, int val) {
+  private void assignInt(char var, int val, int scope) {
     String assignInt = "A9";
     assignInt += String.format("%02X", val);
+    assignInt += "8D";
+    assignInt += variableTable.getTemp(var);
+    exeEnv += assignInt;
+    bytesUsed += assignInt.length() / 2;
+  }
+
+  /**
+   * Assigns a variable var from the source code a a value val which is also from the source code.
+   *
+   * @param var The variable from the source code.
+   * @param val The value that var is to be assigned to.
+   */
+  private void assignBoolean(char var, boolean val, int scope) {
+    int boolState = 0;
+
+    String assignInt = "A9";
+    if (val) {
+      boolState = 1;
+    }
+    assignInt += String.format("%02X", boolState);
     assignInt += "8D";
     assignInt += variableTable.getTemp(var);
     exeEnv += assignInt;
@@ -135,13 +166,27 @@ public class CodeGeneration {
    * @param var The name of the variable that is being assigned in the source code.
    * @param val The value of the string the variable is to be assigned to.
    */
-  private void assignString(char var, String val) {
+  private void assignString(char var, String val, int scope) {
     String assignStr = "A9";
-    storeString();
+    assignStr += String.format("%02x", storeString(val));
+    assignStr += "8D";
+    assignStr += variableTable.getTemp(var);
+    exeEnv += assignStr;
+    bytesUsed += assignStr.length() / 2;
   }
 
+  /**
+   * Prepares a string to be stored in heap.
+   */
   private int storeString(String toBeStored) {
-    
+    String addToHeap = "";
+    for (char c : toBeStored.toCharArray()) {
+      addToHeap += String.format("%02x", (int) c);
+      currentEndOfHeap--;
+    }
+    addToHeap += "00";
+    stringForHeap += addToHeap;
+    return --currentEndOfHeap;
   }
 
   /**
@@ -152,7 +197,7 @@ public class CodeGeneration {
    * @param var1 The variable to have it's value reassigned.
    * @param var2 The variable who's value will be copied.
    */
-  private void assignVar(char var1, char var2) {
+  private void assignVar(char var1, int scope1, char var2, int scope2) {
     String assignVar = "AD";
     assignVar += variableTable.getTemp(var2);
     assignVar += "8D";
@@ -168,7 +213,7 @@ public class CodeGeneration {
    *
    * @param var The variable to have it's value printed.
    */
-  private void print(char var) {
+  private void print(char var, int scope) {
     String toPrint = "AC";
     toPrint += variableTable.getTemp(var);
     toPrint += "A201FF";
