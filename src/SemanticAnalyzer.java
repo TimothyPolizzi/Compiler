@@ -143,7 +143,7 @@ public class SemanticAnalyzer {
 
     String varValue = assignStmtTree.getRoot().getChildren().get(1).getVal();
 
-    if(!Pattern.matches("^\\[.*", varValue)) {
+    if (!Pattern.matches("^\\[.*", varValue)) {
       symbols.activeSymbol(idToken.getOriginal(), scope).setVal(slapTogether(exprTokens));
     } else {
       symbols.activeSymbol(idToken.getOriginal(), scope).setVal(varValue);
@@ -624,6 +624,10 @@ public class SemanticAnalyzer {
    */
   public void printTable() {
     System.out.println(symbols.toString());
+  }
+
+  public SymbolTable getSymbols() {
+    return symbols;
   }
 
 }
