@@ -28,7 +28,8 @@ public class Compiler {
           analyzer.printTree();
           if (analyzer.success()) {
             analyzer.printTable();
-            CodeGeneration codeGen = new CodeGeneration(analyzer.getTree(), iter);
+            CodeGeneration codeGen = new CodeGeneration(analyzer.getTree(), iter,
+                analyzer.getSymbols());
             codeGen.printTables();
           }
         }
