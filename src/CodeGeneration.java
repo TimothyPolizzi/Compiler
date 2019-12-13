@@ -128,7 +128,7 @@ public class CodeGeneration {
             if (Pattern.matches("\\d+", varName.getVal())) {
               assignInt(thisVar, Integer.parseInt(varName.getVal()), thisDepth);
               // assigning a string
-            } else if (Pattern.matches("\\[[a-z]*]", varName.getVal())) {
+            } else if (Pattern.matches("\\[[a-z ]*]", varName.getVal())) {
               assignString(thisVar, varName.getVal(), thisDepth);
               // assigning a boolean
             } else if (Pattern.matches("true|false", varName.getVal())) {
@@ -402,6 +402,7 @@ public class CodeGeneration {
     loopStr += "EC" + temps.get(0);
     loopStr += "D0" + returnTwo;
 
+    bytesUsed += loopStr.length() / 2;
     exeEnv += loopStr;
   }
 

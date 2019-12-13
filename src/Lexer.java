@@ -245,7 +245,7 @@ public class Lexer {
    * @param tokenList A list containing the tokens generated from lexing the current program.
    */
   private void eopWarning(ArrayList<Token> tokenList) {
-    if (!tokenList.get(tokenList.size() - 1).getOriginal()
+    if (tokenList.size() < 1 || !tokenList.get(tokenList.size() - 1).getOriginal()
         .equals("$")) { // If the last token is not '$'
       System.out.println("WARNING Lexer - Missing EOP Character '$'");
       warnCount++;

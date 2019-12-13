@@ -483,6 +483,9 @@ public class Parser {
    * @return A boolean that determines if a given regex matches the top of the tokenList
    */
   private boolean qol(String regex) {
+    if(tokenList.size() < 1) {
+      return false;
+    }
     return Pattern.matches(regex, peek(tokenList).getFlavor());
   }
 

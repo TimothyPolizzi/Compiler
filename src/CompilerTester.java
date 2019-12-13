@@ -77,7 +77,7 @@ public class CompilerTester {
 //    CodeGeneration v = new CodeGeneration(new SyntaxTree(""));
     // Test Here
 
-    String test = "{ boolean a a = false while(a == false) { a = true } }$";
+    String test = "{}$";
 
 
     Compiler comp = new Compiler(test, false);
