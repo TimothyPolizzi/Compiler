@@ -52,7 +52,7 @@ public class VariableTable {
       }
     }
     if(depth > 0) {
-      getTemp(var, depth-1);
+      return getTemp(var, depth-1);
     }
 
     return null;

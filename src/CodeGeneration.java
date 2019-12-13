@@ -85,11 +85,11 @@ public class CodeGeneration {
       // If a root node
       if (child.getChildren().size() > 0) {
         if(!inIf) {
+          List<Node> kids = child.getChildren();
           if (Pattern.matches("Print.*", child.getVal())) {
             print(child.getChildren().get(0).getVal().charAt(0), ast.getDepth(child) - 1);
             return;
           } else if (Pattern.matches("If.*", child.getVal())) {
-            List<Node> kids = child.getChildren();
             if (kids.get(1).getVal().equals("==")) {
               compare(kids.get(0), kids.get(2), true);
             } else {
@@ -97,9 +97,12 @@ public class CodeGeneration {
             }
             currentJump = ifStatement();
             inIf = true;
+          } else if(Pattern.matches("While.*", child.getVal())) {
+            whileLoop(kids.get(0), kids.get(2), kids.get(1));
           }
 
           dft(child.getChildren(), depth);
+
         } else {
           dft(child.getChildren(), depth);
           jumpTable.set(currentJump, exeEnv.length()/2);
@@ -266,7 +269,7 @@ public class CodeGeneration {
     String compareEqual = "";
     boolean firstPass = true;
     Node[] nodes = {left, right};
-    char c = 96;
+    char c = 'A';
 
     for(Node n : nodes) {
       c++;
@@ -306,7 +309,9 @@ public class CodeGeneration {
         }
         compareEqual += variableTable.getTemp(n.getVal().charAt(0), ast.getDepth(n));
       }
-      compareEqual += "EC";
+      if(firstPass) {
+        compareEqual += "EC";
+      }
       firstPass = false;
     }
     compareEqual += "D0";
@@ -314,6 +319,7 @@ public class CodeGeneration {
       compareEqual += "20";
     }
 
+    bytesUsed += compareEqual.length() / 2;
     exeEnv += compareEqual;
   }
 
@@ -325,10 +331,78 @@ public class CodeGeneration {
     String thisJump = "J" + jumpTable.getJumps();
     jumpTable.add(thisJump);
     ifString += thisJump;
-    ifString += "AC";
     exeEnv += ifString;
 
     return thisJump;
+  }
+
+  /**
+   *
+   * @param arg1
+   * @param arg2
+   * @param comparator
+   */
+  private void whileLoop(Node arg1, Node arg2, Node comparator) {
+    String loopStr = "";
+    Node[] nodes = {arg1, arg2};
+    List<String> temps = new ArrayList<>();
+    char tempVar = 'A';
+
+    for(Node n : nodes) {
+      // If thing is a terminal (A9)
+      if (Pattern.matches("(\\d+)|(true|false)", n.getVal())) {
+        loopStr += "A9";
+        // bool true
+        if (n.getVal().equals("true")) {
+          loopStr += "01";
+          // bool false
+        } else if (n.getVal().equals("false")) {
+          loopStr += "00";
+          // int
+        } else {
+          loopStr += String.format("%02X", Integer.parseInt(n.getVal()));
+        }
+        loopStr += "8D";
+        variableTable.addVar(tempVar, ast.getDepth(n));
+        String temp = variableTable.getTemp(tempVar, ast.getDepth(n));
+        temps.add(temp);
+        loopStr += temp;
+      } else {
+        loopStr += "AD";
+        // If thing is a string (aka a mistake)
+        if(Pattern.matches("\\[[a-z]*]", n.getVal())) {
+          char tempVar2 = (char)(tempVar + 1);
+
+          initializeVar(tempVar, ast.getDepth(n));
+          assignString(tempVar, n.getVal(), ast.getDepth(n));
+          loopStr += variableTable.getTemp(tempVar, ast.getDepth(n));
+          loopStr += "8D";
+          variableTable.addVar(tempVar2, ast.getDepth(n));
+          String temp = variableTable.getTemp(tempVar2, ast.getDepth(n));
+          temps.add(temp);
+          loopStr += temp;
+        } else {
+          loopStr += variableTable.getTemp(n.getVal().charAt(0), ast.getDepth(n));
+          loopStr += "8D";
+          variableTable.addVar(tempVar, ast.getDepth(n));
+          String temp = variableTable.getTemp(tempVar, ast.getDepth(n));
+          temps.add(temp);
+          loopStr += temp;
+        }
+      }
+      tempVar++;
+    }
+    int returnTo = (loopStr.length() + exeEnv.length()) / 2;
+    loopStr += "AE" + temps.get(0) + "EC" + temps.get(1);
+    loopStr += "A900D0";
+    loopStr += String.format("%02X", returnTo);
+    loopStr += "A901";
+    int returnTwo = (loopStr.length() + exeEnv.length()) / 2;
+    loopStr += "A2008D" + temps.get(0);
+    loopStr += "EC" + temps.get(0);
+    loopStr += "D0" + returnTwo;
+
+    exeEnv += loopStr;
   }
 
   /**
