@@ -25,7 +25,7 @@ public class CodeGeneration {
    */
   public CodeGeneration(SyntaxTree ast, int programNo, SymbolTable table) {
     exeEnv = "";
-    bytesUsed = 3; // Starts at 2 for the 1 extra 00 after the program, and another
+    bytesUsed = 0;
     currentEndOfHeap = 96;
     stringForHeap = "";
     jumpTable = new JumpTable();
@@ -52,6 +52,7 @@ public class CodeGeneration {
 
     dft(childList, depth);
     exeEnv +="00";
+    bytesUsed++;
     variableTable.calculateAddresses(bytesUsed);
 
     // Replaces temporary variables with the locations in memory
@@ -218,6 +219,7 @@ public class CodeGeneration {
       currentEndOfHeap--;
     }
     addToHeap += "00";
+    bytesUsed++;
     stringForHeap += addToHeap;
     return --currentEndOfHeap;
   }
