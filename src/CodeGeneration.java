@@ -25,7 +25,7 @@ public class CodeGeneration {
    */
   public CodeGeneration(SyntaxTree ast, int programNo, SymbolTable table) {
     exeEnv = "";
-    bytesUsed = 0;
+    bytesUsed = 3; // Starts at 2 for the 1 extra 00 after the program, and another
     currentEndOfHeap = 96;
     stringForHeap = "";
     jumpTable = new JumpTable();
@@ -51,11 +51,17 @@ public class CodeGeneration {
     int depth = 0;
 
     dft(childList, depth);
+    exeEnv +="00";
     variableTable.calculateAddresses(bytesUsed);
 
     // Replaces temporary variables with the locations in memory
     for (VariableItem item : variableTable.getItemList()) {
       exeEnv = exeEnv.replaceAll(item.getTemp(), String.format("%H00",item.getAddress()));
+    }
+
+    // Replaces temporary jumps with the actual jump
+    for(String temp : jumpTable.getTemps()) {
+      exeEnv = exeEnv.replaceAll(temp, String.format("%H00", jumpTable.getJump(temp)));
     }
 
     int diff = currentEndOfHeap - bytesUsed;
@@ -70,17 +76,35 @@ public class CodeGeneration {
 
   private void dft(List<Node> children, int depth) {
     depth++;
+    boolean inIf = false;
+    String currentJump = "";
 
     for (Node child : children) {
 
       // If a root node
       if (child.getChildren().size() > 0) {
-        if (Pattern.matches("Print.*", child.getVal())) {
-          print(child.getChildren().get(0).getVal().charAt(0), ast.getDepth(child));
-          return;
-        }
+        if(!inIf) {
+          if (Pattern.matches("Print.*", child.getVal())) {
+            print(child.getChildren().get(0).getVal().charAt(0), ast.getDepth(child) - 1);
+            return;
+          } else if (Pattern.matches("If.*", child.getVal())) {
+            List<Node> kids = child.getChildren();
+            if (kids.get(1).getVal().equals("==")) {
+              compare(kids.get(0), kids.get(2), true);
+            } else {
+              compare(kids.get(0), kids.get(2), false);
+            }
+            currentJump = ifStatement();
+            inIf = true;
+          }
 
-        dft(child.getChildren(), depth);
+          dft(child.getChildren(), depth);
+        } else {
+          dft(child.getChildren(), depth);
+          jumpTable.set(currentJump, exeEnv.length()/2);
+          inIf = false;
+
+        }
 
         // if a leaf node
       } else {
@@ -94,7 +118,7 @@ public class CodeGeneration {
             // if assigning a variable
           } else if (Pattern.matches("[a-z]", child.getVal())) {
             char thisVar = child.getVal().charAt(0);
-            int thisDepth = ast.getDepth(child);
+            int thisDepth = ast.getDepth(child)-2;
 
             // assigning an integer
             if (Pattern.matches("\\d+", varName.getVal())) {
@@ -126,7 +150,7 @@ public class CodeGeneration {
   private void initializeVar(char var, int scope) {
     String initInt = "A9008D";
     variableTable.addVar(var, scope);
-    initInt += variableTable.getTemp(var);
+    initInt += variableTable.getTemp(var, scope);
     exeEnv += initInt;
     bytesUsed += initInt.length() / 2;
   }
@@ -143,7 +167,7 @@ public class CodeGeneration {
     String assignInt = "A9";
     assignInt += String.format("%02X", val);
     assignInt += "8D";
-    assignInt += variableTable.getTemp(var);
+    assignInt += variableTable.getTemp(var, scope);
     exeEnv += assignInt;
     bytesUsed += assignInt.length() / 2;
   }
@@ -163,7 +187,7 @@ public class CodeGeneration {
     }
     assignInt += String.format("%02X", boolState);
     assignInt += "8D";
-    assignInt += variableTable.getTemp(var);
+    assignInt += variableTable.getTemp(var, scope);
     exeEnv += assignInt;
     bytesUsed += assignInt.length() / 2;
   }
@@ -178,7 +202,7 @@ public class CodeGeneration {
     String assignStr = "A9";
     assignStr += String.format("%02X", storeString(val));
     assignStr += "8D";
-    assignStr += variableTable.getTemp(var);
+    assignStr += variableTable.getTemp(var, scope);
     exeEnv += assignStr;
     bytesUsed += assignStr.length() / 2;
   }
@@ -188,6 +212,7 @@ public class CodeGeneration {
    */
   private int storeString(String toBeStored) {
     String addToHeap = "";
+    toBeStored = toBeStored.substring(1,toBeStored.length()-1);
     for (char c : toBeStored.toCharArray()) {
       addToHeap += String.format("%02X", (int) c);
       currentEndOfHeap--;
@@ -207,9 +232,9 @@ public class CodeGeneration {
    */
   private void assignVar(char var1, int scope1, char var2, int scope2) {
     String assignVar = "AD";
-    assignVar += variableTable.getTemp(var2);
+    assignVar += variableTable.getTemp(var2, scope2);
     assignVar += "8D";
-    assignVar += variableTable.getTemp(var1);
+    assignVar += variableTable.getTemp(var1, scope1);
     exeEnv += assignVar;
     bytesUsed += assignVar.length() / 2;
   }
@@ -223,10 +248,85 @@ public class CodeGeneration {
    */
   private void print(char var, int scope) {
     String toPrint = "AC";
-    toPrint += variableTable.getTemp(var);
+    toPrint += variableTable.getTemp(var, scope);
     toPrint += "A201FF";
     exeEnv += toPrint;
     bytesUsed += toPrint.length() / 2;
+  }
+
+  /**
+   * Compares the values of two item and checks for equality.
+   * @param left
+   * @param right
+   * @parm equal
+   */
+  private void compare(Node left, Node right, Boolean equal){
+    String compareEqual = "";
+    boolean firstPass = true;
+    Node[] nodes = {left, right};
+    char c = 96;
+
+    for(Node n : nodes) {
+      c++;
+
+      // Compare integers
+      if (Pattern.matches("\\d+", n.getVal())) {
+        if(firstPass) {
+          compareEqual += "A2";
+        }
+        compareEqual += String.format("%02X", Integer.parseInt(n.getVal()));
+
+        // Compare strings
+      } else if (Pattern.matches("\\[[a-z]*]", n.getVal())) {
+        if(firstPass) {
+          compareEqual += "AE";
+        }
+        initializeVar(c, ast.getDepth(n)-1);
+        assignString(c, n.getVal(), ast.getDepth(n)-1);
+        compareEqual += variableTable.getTemp(c, ast.getDepth(n)-1);
+
+        // Compare booleans
+      } else if (Pattern.matches("true|false", n.getVal())) {
+        if(firstPass) {
+          compareEqual += "A2";
+        }
+        int bool = 0;
+        if(n.getVal().equals("true")) {
+          bool = 1;
+        }
+
+        compareEqual += String.format("%02X", bool);
+
+        // Compare variables
+      } else if (Pattern.matches("[a-z]", n.getVal())) {
+        if(firstPass) {
+          compareEqual += "AE";
+        }
+        compareEqual += variableTable.getTemp(n.getVal().charAt(0), ast.getDepth(n));
+      }
+      compareEqual += "EC";
+      firstPass = false;
+    }
+    compareEqual += "D0";
+    if(!equal) {
+      compareEqual += "20";
+    }
+
+    exeEnv += compareEqual;
+  }
+
+  /**
+   *
+   */
+  private String ifStatement() {
+    String ifString = "";
+    String thisJump = "J" + jumpTable.getJumps();
+    jumpTable.add(thisJump);
+    ifString += thisJump;
+    ifString += "AC";
+    exeEnv += ifString;
+
+    return thisJump;
   }
 
   /**

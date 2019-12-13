@@ -4,7 +4,7 @@ import java.util.List;
 public class Node {
 
   private String val;
-  private List children;
+  private List<Node> children;
   private Node parent;
 
   /**
@@ -24,7 +24,7 @@ public class Node {
    * @param val The value of the node.
    */
   public Node(String val) {
-    children = new ArrayList();
+    children = new ArrayList<>();
     this.val = val;
   }
 

@@ -38,16 +38,21 @@ public class VariableTable {
   }
 
   /**
-   * Gets the temporary variable associated with a given character variable.
+   * Gets the temporary variable associated with a given character variable. Will get the item at
+   * the given scope or the next highest scope the variable could be found at if it is not in the
+   * given scope.
    *
    * @param var The variable in the source code.
    * @return The stored temporary variable, or null if the item could not be found;
    */
-  public String getTemp(char var) {
+  public String getTemp(char var, int depth) {
     for (VariableItem item : itemList) {
-      if (item.getVar() == var) {
+      if (item.getVar() == var && item.getScope() == depth) {
         return item.getTemp();
       }
+    }
+    if(depth > 0) {
+      getTemp(var, depth-1);
     }
 
     return null;

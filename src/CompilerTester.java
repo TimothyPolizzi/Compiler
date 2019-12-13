@@ -77,7 +77,7 @@ public class CompilerTester {
 //    CodeGeneration v = new CodeGeneration(new SyntaxTree(""));
     // Test Here
 
-    String test = "{int i i = 1 { string i i = \"abc\" } boolean d d = false print(i)}$";
+    String test = "{int i i = 1 if(\"a\" == 1){ string i i = \"abc\" } boolean d d = false print(i)}$";
 
 
     Compiler comp = new Compiler(test, false);
